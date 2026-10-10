@@ -1,0 +1,111 @@
+const stages = ["saved", "applied", "interview", "offer", "rejected"];
+const byId = (id) => document.getElementById(id);
+const titleCase = (value) => value[0].toUpperCase() + value.slice(1);
+
+function notify(message, error = false) {
+  const notice = byId("notice");
+  notice.textContent = message;
+  notice.hidden = !message;
+  notice.className = error ? "notice error" : "notice";
+}
+
+async function request(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: { "Content-Type": "application/json", ...options.headers },
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    const detail = payload.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((item) => `${item.loc.slice(1).join(".")}: ${item.msg}`).join("; ")
+      : detail || "The request failed. Please try again.";
+    throw new Error(message);
+  }
+  return response.status === 204 ? null : response.json();
+}
+
+function element(tag, text, className = "") {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  node.className = className;
+  return node;
+}
+
+let loadVersion = 0;
+async function load() {
+  const version = ++loadVersion;
+  const parameters = new URLSearchParams({ search: byId("search").value });
+  if (byId("stage").value) parameters.set("status", byId("stage").value);
+  const [applications, stats] = await Promise.all([
+    request(`/api/applications?${parameters}`), request("/api/stats"),
+  ]);
+  if (version !== loadVersion) return;
+  byId("total").textContent = stats.total;
+  for (const key of ["applied", "interview", "offer"]) byId(key).textContent = stats.by_status[key];
+  const container = byId("applications");
+  container.replaceChildren();
+  if (!applications.length) {
+    container.append(element("p", "No matching applications yet. Add your first opportunity or adjust your filters.", "empty"));
+    return;
+  }
+  for (const application of applications) {
+    const card = element("article", undefined, "application-card");
+    const top = element("div", undefined, "card-top");
+    const heading = element("div");
+    heading.append(element("h3", application.company), element("p", application.role));
+    const select = element("select");
+    select.setAttribute("aria-label", `Stage for ${application.company} ${application.role}`);
+    for (const stage of stages) {
+      const option = element("option", titleCase(stage));
+      option.value = stage;
+      option.selected = application.status === stage;
+      select.append(option);
+    }
+    select.addEventListener("change", async () => {
+      select.disabled = true;
+      try {
+        await request(`/api/applications/${application.id}`, { method: "PATCH", body: JSON.stringify({ status: select.value }) });
+        await load();
+        notify("Application stage updated.");
+      } catch (error) { select.value = application.status; select.disabled = false; notify(error.message, true); }
+    });
+    top.append(heading, select);
+    card.append(top);
+    if (application.notes) card.append(element("p", application.notes, "notes"));
+    const actions = element("div", undefined, "card-actions");
+    actions.append(element("span", application.follow_up_date ? `Follow up: ${application.follow_up_date}` : "No follow-up date", "subtle"));
+    if (application.url) {
+      const link = element("a", "View role ↗");
+      link.href = application.url; link.target = "_blank"; link.rel = "noopener noreferrer";
+      actions.append(link);
+    }
+    const remove = element("button", "Delete", "text-button");
+    remove.type = "button";
+    remove.addEventListener("click", async () => {
+      if (!window.confirm(`Delete the application for ${application.company}?`)) return;
+      try { await request(`/api/applications/${application.id}`, { method: "DELETE" }); await load(); notify("Application deleted."); }
+      catch (error) { notify(error.message, true); }
+    });
+    actions.append(remove); card.append(actions); container.append(card);
+  }
+}
+
+byId("application-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const button = form.querySelector("button[type=submit]");
+  const values = Object.fromEntries(new FormData(form));
+  values.follow_up_date = values.follow_up_date || null;
+  button.disabled = true;
+  try {
+    await request("/api/applications", { method: "POST", body: JSON.stringify(values) });
+    form.reset(); await load(); notify("Application saved.");
+  } catch (error) { notify(error.message, true); }
+  finally { button.disabled = false; }
+});
+
+let debounce;
+byId("search").addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(() => load().catch((error) => notify(error.message, true)), 200); });
+byId("stage").addEventListener("change", () => load().catch((error) => notify(error.message, true)));
+load().catch((error) => notify(error.message, true));
