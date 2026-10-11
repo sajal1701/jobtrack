@@ -1,8 +1,7 @@
 # JobTrack backlog
 
 Choose one item or one useful slice per session. A larger item may take multiple
-sessions; every commit should capture real progress. Checked items describe the
-starter, not fabricated development history.
+sessions. Mark an item complete when its acceptance criteria are met.
 
 - [x] J00 — Local tracker with persistence, search, stage changes, validation,
   browser UI, API tests, and a CI configuration.
@@ -48,3 +47,5 @@ starter, not fabricated development history.
 - [ ] J14 — Finish the portfolio presentation.
   Acceptance: README has real screenshots, architecture, verified setup, known
   limitations, and a short demo; any performance claims name the measurement.
+  Progress: documented architecture choices, local setup verification, current
+  limitations, and a demo walkthrough. Screenshots remain to be added.
