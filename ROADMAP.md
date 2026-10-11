@@ -1,8 +1,8 @@
 # JobTrack roadmap
 
 JobTrack currently supports local application tracking with SQLite persistence
-and a browser interface. The next priorities are exporting records, editing
-saved details, and navigating larger lists. Unchecked items are planned work,
+and a browser interface. CSV export is available. The next priorities are editing
+saved details and navigating larger lists. Unchecked items are planned work,
 not available features. Mark an item complete when its acceptance criteria are met.
 
 Usage instructions are in [README.md](README.md); implementation details and
@@ -15,7 +15,7 @@ contributor checks are in [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Application workflow
 
-- [ ] J01 — CSV export. Add an export endpoint and a browser download button.
+- [x] J01 — CSV export. Add an export endpoint and a browser download button.
   Acceptance: stage/search filters match the list endpoint; quotes and newlines
   survive export; add an API test with at least two different applications.
 - [ ] J02 — Edit company, role, URL, notes, and follow-up date in the browser.

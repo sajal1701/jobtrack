@@ -31,6 +31,7 @@ API on the same origin. A future React migration can reuse the existing API.
 | --- | --- | --- |
 | GET | `/api/health` | Health check |
 | GET | `/api/applications` | Search, filter, and paginate |
+| GET | `/api/applications/export` | Download all matching applications as CSV |
 | POST | `/api/applications` | Create an application |
 | GET | `/api/applications/{id}` | Read one application |
 | PATCH | `/api/applications/{id}` | Update stage, notes, or follow-up date |
@@ -44,6 +45,11 @@ The list endpoint accepts `search`, `status`, `limit` (1–100, default 100), an
 `offset` (default 0). Results are ordered by descending ID. Search matches
 company or role and treats `%` and `_` as literal characters. Statistics count
 all applications, regardless of list filters.
+
+CSV export accepts the same `search` and `status` filters and ordering as the
+list endpoint, without pagination. It returns `text/csv` with an attachment
+filename of `jobtrack-applications.csv`. Null dates become empty cells, and an
+empty result contains the header row.
 
 PATCH preserves omitted fields. Set `follow_up_date` to `null` to clear it;
 `status` and `notes` cannot be null. An empty patch returns 400, invalid input
@@ -72,7 +78,7 @@ node --check web/app.js
 
 The GitHub Actions workflow is configured to run Python tests and JavaScript
 syntax checks on pushes and pull requests. Locally, setup and the test script
-have passed all 12 API tests, and the JavaScript syntax check has passed.
+have passed all 15 API tests, and the JavaScript syntax check has passed.
 
 ## Making changes
 

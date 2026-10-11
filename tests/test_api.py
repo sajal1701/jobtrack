@@ -1,3 +1,5 @@
+import csv
+from io import StringIO
 import tempfile
 import unittest
 from pathlib import Path
@@ -49,6 +51,41 @@ class JobTrackTests(unittest.TestCase):
         self.add(company="100% Labs")
         self.add(company="Other Labs")
         self.assertEqual(len(self.client.get("/api/applications", params={"search": "%"}).json()), 1)
+
+    def test_csv_export_matches_filters_and_preserves_text(self):
+        self.add(company='100%_ Labs, "North"', notes='Call "Sam"\nDiscuss role',
+                 status="applied", follow_up_date="2026-10-20")
+        self.add(company="Other Company", role="Researcher", notes="Café\r\nSecond line")
+        self.add(company="100%_ Labs", status="interview")
+        for parameters in ({}, {"status": "applied"}, {"search": " LABS "},
+                           {"search": "%_", "status": "applied"}, {"search": "researcher"}):
+            with self.subTest(parameters=parameters):
+                response = self.client.get("/api/applications/export", params=parameters)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("text/csv", response.headers["content-type"])
+                self.assertEqual(response.headers["content-disposition"],
+                                 'attachment; filename="jobtrack-applications.csv"')
+                rows = list(csv.DictReader(StringIO(response.text, newline="")))
+                expected = self.client.get("/api/applications", params=parameters).json()
+                self.assertEqual(rows, [{key: "" if value is None else str(value)
+                                         for key, value in record.items()} for record in expected])
+
+    def test_csv_export_empty_and_invalid_filters(self):
+        response = self.client.get("/api/applications/export")
+        reader = csv.DictReader(StringIO(response.text))
+        self.assertIn("company", reader.fieldnames)
+        self.assertEqual(list(reader), [])
+        for parameters in ({"status": "fake"}, {"search": "x" * 201}):
+            self.assertEqual(self.client.get("/api/applications/export", params=parameters).status_code, 422)
+
+    def test_csv_export_includes_records_beyond_first_page(self):
+        for index in range(101):
+            self.add(company=f"Company {index}")
+        self.assertEqual(len(self.client.get("/api/applications").json()), 100)
+        rows = list(csv.DictReader(StringIO(self.client.get("/api/applications/export").text)))
+        self.assertEqual(len(rows), 101)
+        self.assertEqual(rows[0]["company"], "Company 100")
+        self.assertEqual(rows[-1]["company"], "Company 0")
 
     def test_sql_text_is_data(self):
         self.add(company="Robert'); DROP TABLE applications;--")

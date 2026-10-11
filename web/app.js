@@ -32,11 +32,16 @@ function element(tag, text, className = "") {
   return node;
 }
 
+function filterParameters() {
+  const parameters = new URLSearchParams({ search: byId("search").value });
+  if (byId("stage").value) parameters.set("status", byId("stage").value);
+  return parameters;
+}
+
 let loadVersion = 0;
 async function load() {
   const version = ++loadVersion;
-  const parameters = new URLSearchParams({ search: byId("search").value });
-  if (byId("stage").value) parameters.set("status", byId("stage").value);
+  const parameters = filterParameters();
   const [applications, stats] = await Promise.all([
     request(`/api/applications?${parameters}`), request("/api/stats"),
   ]);
@@ -106,6 +111,14 @@ byId("application-form").addEventListener("submit", async (event) => {
 });
 
 let debounce;
+byId("export-csv").addEventListener("click", () => {
+  const link = element("a");
+  link.href = `/api/applications/export?${filterParameters()}`;
+  link.download = "jobtrack-applications.csv";
+  document.body.append(link);
+  link.click();
+  link.remove();
+});
 byId("search").addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(() => load().catch((error) => notify(error.message, true)), 200); });
 byId("stage").addEventListener("change", () => load().catch((error) => notify(error.message, true)));
 load().catch((error) => notify(error.message, true));

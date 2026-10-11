@@ -11,6 +11,7 @@ you left off after closing the app.
 - Search by company or role and filter by stage.
 - See your total applications, interviews, and offers at a glance.
 - Open the original job listing or delete an application you no longer need.
+- Download matching applications as a CSV file.
 
 ## Get started
 
@@ -50,6 +51,11 @@ The summary counts cover your whole tracker, even when filters are active.
 Click **View role** to open a saved job link. **Delete** asks for confirmation
 before removing the record; there is no undo.
 
+Click **Download CSV** to export all applications matching your current search
+and stage filter, including matches beyond the 100 shown in the browser. Clear
+the search and choose **All stages** to export the whole tracker. The file
+includes notes and follow-up dates; an empty result downloads column headers.
+
 ## Your data
 
 Applications are stored in `.data/jobtrack.sqlite3` inside the project folder.
@@ -69,7 +75,7 @@ Replacing the file replaces the tracker’s current records.
 - You can change stages in the browser, but editing other saved details is
   still planned.
 - Follow-up dates are displayed on application cards; they do not send reminders.
-- CSV import and export are not available yet.
+- CSV import is not available yet.
 
 ## Troubleshooting
 

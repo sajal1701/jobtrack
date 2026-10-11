@@ -2,6 +2,8 @@
 
 from contextlib import asynccontextmanager
 from datetime import date
+import csv
+from io import StringIO
 import os
 from pathlib import Path
 from typing import Literal
@@ -88,6 +90,17 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     @application.post("/api/applications", status_code=201)
     def add_application(payload: ApplicationInput):
         return store.create_application(database, payload.model_dump(mode="json"))
+
+    @application.get("/api/applications/export")
+    def export_applications(search: str = Query(default="", max_length=200), status: Status | None = None):
+        records = store.list_applications(database, search.strip(), status, limit=None)
+        output = StringIO(newline="")
+        fields = ["id", "company", "role", "status", "url", "notes", "follow_up_date", "created_at", "updated_at"]
+        writer = csv.DictWriter(output, fieldnames=fields)
+        writer.writeheader()
+        writer.writerows(records)
+        return Response(output.getvalue(), media_type="text/csv",
+                        headers={"Content-Disposition": 'attachment; filename="jobtrack-applications.csv"'})
 
     @application.get("/api/applications/{application_id}")
     def get_application(application_id: int):

@@ -58,7 +58,7 @@ def create_application(path: Path, payload: dict) -> dict:
         return dict(row)
 
 
-def list_applications(path: Path, search: str, status: str | None, limit: int, offset: int) -> list[dict]:
+def list_applications(path: Path, search: str, status: str | None, limit: int | None, offset: int = 0) -> list[dict]:
     conditions, parameters = [], []
     if search:
         # Escape LIKE metacharacters so a search is literal, rather than a pattern.
@@ -69,10 +69,13 @@ def list_applications(path: Path, search: str, status: str | None, limit: int, o
         conditions.append("status = ?")
         parameters.append(status)
     clause = " WHERE " + " AND ".join(conditions) if conditions else ""
-    parameters.extend([limit, offset])
+    pagination = ""
+    if limit is not None:
+        pagination = " LIMIT ? OFFSET ?"
+        parameters.extend([limit, offset])
     with connection(path) as db:
         rows = db.execute("SELECT * FROM applications" + clause +
-                          " ORDER BY id DESC LIMIT ? OFFSET ?", parameters).fetchall()
+                          " ORDER BY id DESC" + pagination, parameters).fetchall()
         return [dict(row) for row in rows]
 
 
