@@ -14,6 +14,8 @@ class JobTrackTests(unittest.TestCase):
         self.path = Path(self.directory.name) / "jobs.sqlite3"
         self.client = TestClient(create_app(self.path))
         self.client.__enter__()
+        self.client.headers["X-JobTrack"] = "1"
+        self.client.post("/api/auth/register", json={"username": "tester", "password": "test-password-long"})
 
     def tearDown(self):
         self.client.__exit__(None, None, None)
@@ -129,6 +131,8 @@ class JobTrackTests(unittest.TestCase):
     def test_persistence_survives_new_app(self):
         item = self.add()
         with TestClient(create_app(self.path)) as another:
+            another.headers["X-JobTrack"] = "1"
+            another.post("/api/auth/login", json={"username": "tester", "password": "test-password-long"})
             self.assertEqual(another.get(f"/api/applications/{item['id']}").json()["company"], "Example Labs")
 
     def test_frontend_and_health(self):

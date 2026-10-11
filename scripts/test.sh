@@ -3,3 +3,4 @@ set -euo pipefail
 project_path="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$project_path"
 .venv/bin/python -m unittest discover -s tests -v
+node tests/test_frontend.cjs

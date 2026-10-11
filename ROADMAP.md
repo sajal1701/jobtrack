@@ -1,7 +1,7 @@
 # JobTrack roadmap
 
-JobTrack currently supports local application tracking with SQLite persistence
-and a browser interface. CSV export is available. The next priorities are editing
+JobTrack currently supports local application tracking with SQLite persistence,
+account registration/login, per-account ownership, and a browser interface. CSV export is available. The next priorities are editing
 saved details and navigating larger lists. Unchecked items are planned work,
 not available features. Mark an item complete when its acceptance criteria are met.
 
@@ -46,10 +46,10 @@ contributor checks are in [DEVELOPMENT.md](DEVELOPMENT.md).
   the default local database and the PostgreSQL configuration.
 ## Accounts and deployment
 
-- [ ] J10 — Implement registration and login as a separate milestone.
+- [x] J10 — Implement registration and login as a separate milestone.
   Acceptance: stored passwords are hashed, invalid credentials fail, and logout
   behavior is documented. Split this into reviewable changes.
-- [ ] J11 — Scope application data to the authenticated owner.
+- [x] J11 — Scope application data to the authenticated owner.
   Acceptance: one user cannot read, edit, or delete another user's application;
   include explicit cross-user API tests before any public deployment.
 - [ ] J12 — Add a status board and accessible loading/empty/error states.

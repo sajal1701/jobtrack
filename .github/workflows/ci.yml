@@ -20,3 +20,4 @@ jobs:
         with:
           node-version: '22'
       - run: node --check web/app.js
+      - run: node tests/test_frontend.cjs

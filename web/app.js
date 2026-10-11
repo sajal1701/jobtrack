@@ -12,9 +12,10 @@ function notify(message, error = false) {
 async function request(path, options = {}) {
   const response = await fetch(path, {
     ...options,
-    headers: { "Content-Type": "application/json", ...options.headers },
+    headers: { "Content-Type": "application/json", "X-JobTrack": "1", ...options.headers },
   });
   if (!response.ok) {
+    if (response.status === 401) showAccount(null);
     const payload = await response.json().catch(() => ({}));
     const detail = payload.detail;
     const message = Array.isArray(detail)
@@ -121,4 +122,51 @@ byId("export-csv").addEventListener("click", () => {
 });
 byId("search").addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(() => load().catch((error) => notify(error.message, true)), 200); });
 byId("stage").addEventListener("change", () => load().catch((error) => notify(error.message, true)));
-load().catch((error) => notify(error.message, true));
+function showAccount(user) {
+  ++loadVersion;
+  byId("auth-panel").hidden = Boolean(user);
+  byId("tracker").hidden = !user;
+  byId("account-name").textContent = user ? `Signed in as ${user.username}` : "";
+  byId("applications").replaceChildren();
+  for (const id of ["total", "applied", "interview", "offer"]) byId(id).textContent = "0";
+  byId("application-form").reset();
+  byId("search").value = "";
+  byId("stage").value = "";
+}
+
+byId("auth-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const action = event.submitter.value;
+  const buttons = form.querySelectorAll("button");
+  buttons.forEach((button) => { button.disabled = true; });
+  try {
+    const user = await request(`/api/auth/${action}`, {
+      method: "POST", body: JSON.stringify(Object.fromEntries(new FormData(form))),
+    });
+    form.reset();
+    showAccount(user);
+    await load();
+    notify("Signed in.");
+  } catch (error) { notify(error.message, true); }
+  finally { buttons.forEach((button) => { button.disabled = false; }); }
+});
+
+byId("logout").addEventListener("click", async () => {
+  const button = byId("logout");
+  button.disabled = true;
+  try {
+    await request("/api/auth/logout", { method: "POST" });
+    showAccount(null);
+    notify("Signed out.");
+  } catch (error) { notify(error.message, true); }
+  finally { button.disabled = false; }
+});
+
+request("/api/auth/me").then(async (user) => {
+  showAccount(user);
+  await load();
+}).catch((error) => {
+  showAccount(null);
+  if (error.message !== "Please sign in.") notify(error.message, true);
+});

@@ -36,6 +36,16 @@ the `jobtrack` folder and run:
 bash scripts/run.sh
 ```
 
+## Your account
+
+Choose a username and a password on the sign-in screen, then click **Create
+account**. Usernames use 3–50 letters, numbers, underscores, or hyphens and are
+case-insensitive. Passwords require 12–128 characters.
+
+Each account has its own applications, statistics, and CSV exports. Sessions
+last up to 24 hours; use **Sign out** to end a session immediately. Sign in with
+the same account next time. Password reset is not available yet.
+
 ## Add your first application
 
 1. Enter the **Company** and **Role** in the **Add an application** form.
@@ -59,8 +69,8 @@ includes notes and follow-up dates; an empty result downloads column headers.
 ## Your data
 
 Applications are stored in `.data/jobtrack.sqlite3` inside the project folder.
-They survive browser refreshes and server restarts. There is no cloud account
-or sync between computers.
+They survive browser refreshes and server restarts. Accounts are stored in the same local database. There is no sync between
+computers. A database backup includes accounts and sessions, so keep it private.
 
 To make a backup, stop the app and copy `.data/jobtrack.sqlite3` to a safe
 location. To restore it, stop the app and replace that file with your backup.
@@ -68,14 +78,27 @@ Replacing the file replaces the tracker’s current records.
 
 ## Current limitations
 
-- JobTrack is intended for one person using it locally; it has no login or
-  shared accounts.
+- JobTrack runs locally by default. Public hosting still needs HTTPS, secure
+  cookie configuration, and persistent storage (see the development guide).
 - The browser shows up to 100 matching applications. Narrow the search or
   stage filter to find a record.
 - You can change stages in the browser, but editing other saved details is
   still planned.
 - Follow-up dates are displayed on application cards; they do not send reminders.
 - CSV import is not available yet.
+
+## Upgrading from the version without accounts
+
+Existing applications are preserved, but remain hidden until a local
+administrator assigns them to an account. Register your account, stop the app,
+back up the database, then run (replace `your_username` with your account):
+
+```bash
+.venv/bin/python scripts/claim_legacy.py your_username
+```
+
+This assigns all unowned records to that account. It leaves records already
+owned by other accounts unchanged. Restart the app to see your applications.
 
 ## Troubleshooting
 

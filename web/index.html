@@ -8,13 +8,25 @@
 <body>
   <main>
     <header><div><p class="eyebrow">YOUR NEXT OPPORTUNITY</p><h1>JobTrack<span>.</span></h1><p>One place for your applications, notes, and next steps.</p></div><a class="badge" href="/docs">API docs ↗</a></header>
+    <p id="notice" role="status" aria-live="polite" hidden></p>
+    <section id="auth-panel" class="panel">
+      <h2>Sign in or create an account</h2>
+      <form id="auth-form">
+        <label>Username<input name="username" required minlength="3" maxlength="50" pattern="[a-zA-Z0-9_-]+" autocomplete="username"></label>
+        <label>Password<input name="password" type="password" required minlength="12" maxlength="128" autocomplete="current-password"></label>
+        <p class="subtle">Use 3–50 letters, numbers, underscores, or hyphens for your username and 12–128 characters for your password.</p>
+        <button type="submit" value="login">Sign in</button>
+        <button type="submit" value="register">Create account</button>
+      </form>
+    </section>
+    <div id="tracker" hidden>
+    <div class="account-bar"><span id="account-name"></span><button id="logout" type="button">Sign out</button></div>
     <section class="stats" aria-label="Application statistics">
       <article><span>Total applications</span><strong id="total">0</strong></article>
       <article><span>Applied</span><strong id="applied">0</strong></article>
       <article><span>Interviews</span><strong id="interview">0</strong></article>
       <article><span>Offers</span><strong id="offer">0</strong></article>
     </section>
-    <p id="notice" role="status" aria-live="polite" hidden></p>
     <div class="layout">
       <section class="panel form-panel"><p class="eyebrow">KEEP THE MOMENTUM</p><h2>Add an application</h2>
         <form id="application-form">
@@ -33,6 +45,7 @@
         </div>
         <div id="applications" aria-live="polite"></div><p class="subtle">Showing up to 100 matching applications. Statistics cover your whole tracker.</p>
       </section>
+    </div>
     </div>
     <footer>Built to make the next step clearer. Your data stays in this local app.</footer>
   </main>

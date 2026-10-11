@@ -8,9 +8,10 @@ covers the code structure, API behavior, and checks for contributors.
 | Path | Responsibility |
 | --- | --- |
 | `jobtrack/api.py` | FastAPI routes, request validation, and static file serving |
+| `jobtrack/auth.py` | Salted scrypt password hashing and session token hashing |
 | `jobtrack/store.py` | SQLite schema, queries, and transactions |
 | `web/` | Browser interface, styles, and application state |
-| `tests/test_api.py` | API tests using temporary databases |
+| `tests/` | API/authentication tests with temporary databases and client authentication checks |
 | `scripts/` | Setup, local server, and test commands |
 | `.github/workflows/ci.yml` | Checks for pushes and pull requests |
 
@@ -56,6 +57,38 @@ PATCH preserves omitted fields. Set `follow_up_date` to `null` to clear it;
 returns 422, and missing records return 404. Company, role, and URL cannot yet
 be changed through PATCH.
 
+## Authentication and ownership
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| POST | `/api/auth/register` | Create an account and start a session |
+| POST | `/api/auth/login` | Verify credentials and start a session |
+| GET | `/api/auth/me` | Read the signed-in account |
+| POST | `/api/auth/logout` | Revoke the current session |
+
+Registration/login accept JSON `username` and `password`. All application and
+statistics endpoints require a session cookie and return 401 without one.
+Records owned by another account return 404. Responses keep the existing
+application fields; the server determines ownership from the session.
+
+Passwords use salted scrypt (`N=2^17`, `r=8`, `p=1`), following
+[OWASP password storage guidance](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html). At most two hashes run
+concurrently per process. Sessions use random tokens; only SHA-256 token hashes
+are stored in SQLite. Cookies are HttpOnly and SameSite=Strict, expire after
+24 hours, rotate on login, and are revoked on logout. API responses use
+`Cache-Control: no-store`.
+
+Mutating API requests require `X-JobTrack: 1`; browser requests with a foreign
+Origin are rejected. The client sends the header automatically. Scripts using
+the API must send it too. Login and registration share a persistent limit of
+20 attempts per client IP per 60-second window; exceeded limits return 429.
+
+For HTTPS hosting, set `JOBTRACK_SECURE_COOKIE=1`, use persistent database
+storage, and configure the reverse proxy so the app receives the correct
+scheme and client address. Trust forwarded headers only from your proxy.
+Secure cookies should remain disabled only for local HTTP development.
+Password reset, email verification, and account deletion remain future work.
+
 ## Data and configuration
 
 The default database is `.data/jobtrack.sqlite3`. To run with a separate local
@@ -66,8 +99,10 @@ JOBTRACK_DB=.data/demo.sqlite3 bash scripts/run.sh
 ```
 
 Tests pass an isolated database path to `create_app(db_path)` and do not use
-personal application records. Database initialization creates the table if it
-does not exist; versioned schema migrations are still planned.
+personal application records. Database initialization adds account/session tables and an `owner_id` column
+to existing application tables. Unowned records remain preserved and private
+until assigned with `scripts/claim_legacy.py`; initialization is repeatable.
+General versioned schema migrations remain planned.
 
 ## Verify a change
 
@@ -77,8 +112,8 @@ node --check web/app.js
 ```
 
 The GitHub Actions workflow is configured to run Python tests and JavaScript
-syntax checks on pushes and pull requests. Locally, setup and the test script
-have passed all 15 API tests, and the JavaScript syntax check has passed.
+syntax and frontend authentication checks on pushes and pull requests. Locally, setup and the test script
+have passed all 25 API tests, and the JavaScript syntax check has passed.
 
 ## Making changes
 
