@@ -1,89 +1,87 @@
 # JobTrack
 
-A local-first job application tracker with a FastAPI backend, SQLite persistence,
-and a small browser interface. Track opportunities, change stages, filter records,
-and record your next follow-up.
+Keep your job applications, notes, and next steps in one place. JobTrack runs
+on your computer and saves your applications locally, so you can pick up where
+you left off after closing the app.
 
-## Run on your Mac
+## What you can do
 
-Requires Python 3.11 or newer. In Terminal, enter the `jobtrack` folder:
+- Save a company, role, job link, notes, and an optional follow-up date.
+- Track each application as Saved, Applied, Interview, Offer, or Rejected.
+- Search by company or role and filter by stage.
+- See your total applications, interviews, and offers at a glance.
+- Open the original job listing or delete an application you no longer need.
+
+## Get started
+
+You need Python 3.11 or newer, Git, and a terminal with Bash. The commands below
+are intended for macOS or Linux. Setup needs an internet connection to download
+dependencies.
 
 ```bash
+git clone https://github.com/sajal1701/jobtrack.git
+cd jobtrack
 bash scripts/setup.sh
 bash scripts/run.sh
 ```
 
-Open http://127.0.0.1:8010. API documentation: http://127.0.0.1:8010/docs.
-Stop the server with Control+C. Setup creates a project-specific `.venv`.
-Application data is stored in `.data/jobtrack.sqlite3`, which Git ignores.
-Set `JOBTRACK_DB` to use a different database file.
+Open [JobTrack](http://127.0.0.1:8010) in your browser. Keep the terminal running
+while you use the app. To stop it, press **Control+C** in that terminal.
 
-## What works today
-
-- Create, list, read, update, and delete applications through the REST API.
-- Add applications and change stages in the browser.
-- Store company, role, URL, notes, status, and an optional follow-up date.
-- Filter by stage and search company or role; search treats `%` and `_` literally.
-- View total applications, applied applications, interviews, and offers.
-- Validate blank fields, status values, dates, and link schemes.
-- Use parameterized SQL and scoped transactions.
-- Run 12 API tests against isolated temporary databases.
-
-This is a single-user local application. Authentication, multi-user ownership,
-PostgreSQL, a React client, imports, and production deployment are backlog items.
-The browser currently displays up to 100 matching applications; the API has
-`limit` and `offset` parameters. Statistics cover all stored applications.
-
-## Architecture
-
-`web/` is the browser client. `jobtrack/api.py` validates HTTP input and maps
-missing records to HTTP errors. `jobtrack/store.py` owns SQLite operations.
-`create_app(db_path)` makes it possible to test persistence without touching
-personal data. The server serves the UI and API from the same origin.
-
-SQLite keeps local setup simple: there is no separate database server to run.
-The browser uses plain JavaScript, and serving it from FastAPI keeps the UI and
-API on the same origin. A future React migration can reuse the existing API.
-
-## Try it out
-
-1. Start the app and add a sample application with a company, role, and URL.
-2. Change its stage to Interview and check that the summary counts update.
-3. Search for the company and use the stage filter to narrow the list.
-4. Restart the server and confirm the application is still there.
-
-Use sample records for demos. Local application data stays in `.data/` and is
-excluded from version control.
-
-## API
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/api/health` | Health check |
-| GET | `/api/applications` | Search, filter, and paginate |
-| POST | `/api/applications` | Create an application |
-| GET | `/api/applications/{id}` | Read one application |
-| PATCH | `/api/applications/{id}` | Update stage, notes, or follow-up date |
-| DELETE | `/api/applications/{id}` | Delete one application |
-| GET | `/api/stats` | Counts for all applications |
-
-## Verify a change
+Setup is only needed the first time. To use JobTrack again, open a terminal in
+the `jobtrack` folder and run:
 
 ```bash
-bash scripts/test.sh
-node --check web/app.js
+bash scripts/run.sh
 ```
 
-The GitHub Actions workflow is configured to run Python tests and JavaScript
-syntax checks on pushes and pull requests. Locally, setup and the test script
-have passed all 12 API tests, and the JavaScript syntax check has passed.
+## Add your first application
 
-## Development
+1. Enter the **Company** and **Role** in the **Add an application** form.
+2. Choose a **Stage**. Use Saved for a role you want to apply to, or Applied
+   once you have submitted your application.
+3. Optionally add a job link, follow-up date, and notes, then click
+   **Save application**.
+4. Your application appears under **Your opportunities**. Change its stage
+   using the dropdown on its card as you make progress.
 
-See `ROADMAP.md` for planned features and acceptance criteria.
-Keep changes focused, test the behavior, and use
-commit messages that describe the change.
+Use **Search company or role** and **All stages** to find applications.
+The summary counts cover your whole tracker, even when filters are active.
+Click **View role** to open a saved job link. **Delete** asks for confirmation
+before removing the record; there is no undo.
 
-Example: `feat: export filtered applications as CSV`.
+## Your data
 
-The initial implementation was prepared with Codex assistance.
+Applications are stored in `.data/jobtrack.sqlite3` inside the project folder.
+They survive browser refreshes and server restarts. There is no cloud account
+or sync between computers.
+
+To make a backup, stop the app and copy `.data/jobtrack.sqlite3` to a safe
+location. To restore it, stop the app and replace that file with your backup.
+Replacing the file replaces the tracker’s current records.
+
+## Current limitations
+
+- JobTrack is intended for one person using it locally; it has no login or
+  shared accounts.
+- The browser shows up to 100 matching applications. Narrow the search or
+  stage filter to find a record.
+- You can change stages in the browser, but editing other saved details is
+  still planned.
+- Follow-up dates are displayed on application cards; they do not send reminders.
+- CSV import and export are not available yet.
+
+## Troubleshooting
+
+- **Python version error:** setup requires Python 3.11 or newer. If you have
+  multiple versions installed, select one with
+  `PYTHON_BIN=python3.12 bash scripts/setup.sh`.
+- **“Run bash scripts/setup.sh first”:** run setup from the project folder,
+  then start the app again.
+- **The browser cannot connect:** keep the server terminal open and check it
+  for errors. The app uses port 8010; another process using that port must be
+  stopped before JobTrack can start.
+
+For technical details, API endpoints, and test commands, see
+[the development guide](DEVELOPMENT.md). Planned features are listed in
+[the roadmap](ROADMAP.md).
