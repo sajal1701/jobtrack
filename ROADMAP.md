@@ -21,6 +21,9 @@ contributor checks are in [DEVELOPMENT.md](DEVELOPMENT.md).
 - [ ] J02 — Edit company, role, URL, notes, and follow-up date in the browser.
   Acceptance: partial updates preserve omitted values and validation remains
   consistent with creation; test a failed edit and a successful one.
+  Progress: API supports editing all listed fields with shared creation
+  validation, partial-update tests, and ownership checks. Browser edit form
+  remains to be added.
 - [ ] J03 — Browser pagination. Add next/previous controls and matching counts.
   Acceptance: more than 100 records can be navigated without losing filters;
   disabled buttons and empty pages behave correctly.

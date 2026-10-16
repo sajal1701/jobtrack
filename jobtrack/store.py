@@ -91,8 +91,8 @@ def list_applications(path: Path, search: str, status: str | None, limit: int | 
 
 def update_application(path: Path, application_id: int, changes: dict, owner_id: int):
     # Column names come from this allowlist; values always use SQL parameters.
-    if not changes or not set(changes).issubset({"status", "notes", "follow_up_date"}):
-        raise ValueError("Choose status, notes, or follow_up_date to update.")
+    if not changes or not set(changes).issubset({"company", "role", "url", "status", "notes", "follow_up_date"}):
+        raise ValueError("Choose company, role, url, status, notes, or follow_up_date to update.")
     changes = {**changes, "updated_at": datetime.now(UTC).isoformat(timespec="seconds")}
     columns = ", ".join(f"{column} = ?" for column in changes)
     with connection(path) as db:

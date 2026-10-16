@@ -35,7 +35,7 @@ API on the same origin. A future React migration can reuse the existing API.
 | GET | `/api/applications/export` | Download all matching applications as CSV |
 | POST | `/api/applications` | Create an application |
 | GET | `/api/applications/{id}` | Read one application |
-| PATCH | `/api/applications/{id}` | Update stage, notes, or follow-up date |
+| PATCH | `/api/applications/{id}` | Edit company, role, URL, stage, notes, or follow-up date |
 | DELETE | `/api/applications/{id}` | Delete one application |
 | GET | `/api/stats` | Counts for all applications |
 
@@ -53,9 +53,10 @@ filename of `jobtrack-applications.csv`. Null dates become empty cells, and an
 empty result contains the header row.
 
 PATCH preserves omitted fields. Set `follow_up_date` to `null` to clear it;
-`status` and `notes` cannot be null. An empty patch returns 400, invalid input
-returns 422, and missing records return 404. Company, role, and URL cannot yet
-be changed through PATCH.
+Company, role, URL, status, and notes cannot be null. Company, role, and URL
+reuse creation validation, including whitespace trimming and HTTP(S) link
+validation. Set `url` to an empty string to remove a link. An empty patch
+returns 400, invalid input returns 422, and missing records return 404.
 
 ## Authentication and ownership
 
@@ -113,7 +114,7 @@ node --check web/app.js
 
 The GitHub Actions workflow is configured to run Python tests and JavaScript
 syntax and frontend authentication checks on pushes and pull requests. Locally, setup and the test script
-have passed all 25 API tests, and the JavaScript syntax check has passed.
+have passed all 27 API tests, and the JavaScript syntax check has passed.
 
 ## Making changes
 

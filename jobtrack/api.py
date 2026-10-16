@@ -49,8 +49,11 @@ class ApplicationInput(BaseModel):
         return value
 
 
-class ApplicationPatch(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class ApplicationPatch(ApplicationInput):
+    # Inherit creation validators, but distinguish omitted fields from updates.
+    company: str | None = Field(default=None, min_length=1, max_length=150)
+    role: str | None = Field(default=None, min_length=1, max_length=200)
+    url: str | None = Field(default=None, max_length=2000)
     status: Status | None = None
     notes: str | None = Field(default=None, max_length=5000)
     follow_up_date: date | None = None
@@ -59,7 +62,7 @@ class ApplicationPatch(BaseModel):
     @classmethod
     def non_nullable_fields(cls, value):
         if isinstance(value, dict):
-            for key in ("status", "notes"):
+            for key in ("company", "role", "url", "status", "notes"):
                 if key in value and value[key] is None:
                     raise ValueError(f"{key} cannot be null.")
         return value

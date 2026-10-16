@@ -99,6 +99,7 @@ class AuthenticationTests(unittest.TestCase):
         endpoint = f"/api/applications/{item['id']}"
         self.assertEqual(self.client.get(endpoint).status_code, 404)
         self.assertEqual(self.client.patch(endpoint, json={"status": "offer"}).status_code, 404)
+        self.assertEqual(self.client.patch(endpoint, json={"company": "Stolen", "role": "Changed", "url": "https://example.com"}).status_code, 404)
         self.assertEqual(self.client.delete(endpoint).status_code, 404)
         self.client.post("/api/auth/login", json={"username": "alice", "password": "a-long-test-password"})
         self.assertEqual(self.client.get(endpoint).json(), item)

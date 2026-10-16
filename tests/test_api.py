@@ -113,6 +113,41 @@ class JobTrackTests(unittest.TestCase):
         self.assertEqual(self.client.patch(f"/api/applications/{item['id']}", json={}).status_code, 400)
         self.assertEqual(self.client.patch(f"/api/applications/{item['id']}", json={"status": None}).status_code, 422)
 
+    def test_edit_application_details_preserves_omitted_fields(self):
+        item = self.add(status="interview", notes="Keep these notes", follow_up_date="2026-10-20")
+        endpoint = f"/api/applications/{item['id']}"
+        response = self.client.patch(endpoint, json={
+            "company": "  Updated Company  ", "role": "  Senior Engineer  ",
+            "url": "  https://example.com/jobs/123  ",
+        })
+        self.assertEqual(response.status_code, 200)
+        updated = response.json()
+        self.assertEqual(updated["company"], "Updated Company")
+        self.assertEqual(updated["role"], "Senior Engineer")
+        self.assertEqual(updated["url"], "https://example.com/jobs/123")
+        for key in ("id", "status", "notes", "follow_up_date", "created_at"):
+            self.assertEqual(updated[key], item[key])
+        self.assertEqual(self.client.get(endpoint).json(), updated)
+        cleared = self.client.patch(endpoint, json={"url": ""}).json()
+        self.assertEqual(cleared["url"], "")
+        self.assertEqual(cleared["company"], "Updated Company")
+
+    def test_invalid_detail_edits_leave_record_unchanged(self):
+        item = self.add(url="https://example.com", notes="Original notes")
+        endpoint = f"/api/applications/{item['id']}"
+        invalid_edits = (
+            {"company": "   "}, {"role": ""}, {"role": "\n\t"},
+            {"company": "x" * 151}, {"role": "x" * 201},
+            {"url": "javascript:alert(1)"}, {"url": "https://"}, {"url": "x" * 2001},
+            {"company": None}, {"role": None}, {"url": None},
+            {"owner_id": 123},
+        )
+        for changes in invalid_edits:
+            with self.subTest(changes=changes):
+                payload = {"notes": "Must not be saved", **changes}
+                self.assertEqual(self.client.patch(endpoint, json=payload).status_code, 422)
+                self.assertEqual(self.client.get(endpoint).json(), item)
+
     def test_delete_and_missing_records(self):
         item = self.add()
         endpoint = f"/api/applications/{item['id']}"
