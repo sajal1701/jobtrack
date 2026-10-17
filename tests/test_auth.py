@@ -141,6 +141,7 @@ class AuthenticationTests(unittest.TestCase):
             self.assertTrue(store.allow_auth_attempt(self.path, "testclient", now))
         response = self.client.post("/api/auth/login", json={"username": "alice", "password": "a-long-test-password"})
         self.assertEqual(response.status_code, 429)
+        self.assertEqual(response.json()["detail"], "Too many sign-in attempts. Try again in a minute.")
         self.assertEqual(response.headers["retry-after"], "60")
         self.assertTrue(store.allow_auth_attempt(self.path, "testclient", now + 60))
 

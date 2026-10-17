@@ -12,7 +12,7 @@ from typing import Literal
 from urllib.parse import urlsplit
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -96,14 +96,14 @@ def create_app(db_path: str | Path | None = None) -> FastAPI:
     async def protect_requests(request: Request, call_next):
         if request.method in {"POST", "PATCH", "DELETE", "PUT"}:
             if request.headers.get("X-JobTrack") != "1":
-                return Response("Missing request protection header.", status_code=403)
+                return JSONResponse({"detail": "Missing request protection header."}, status_code=403)
             origin = request.headers.get("origin")
             if origin and origin != str(request.base_url).rstrip("/"):
-                return Response("Cross-origin request rejected.", status_code=403)
+                return JSONResponse({"detail": "Cross-origin request rejected."}, status_code=403)
         if request.method == "POST" and request.url.path in {"/api/auth/login", "/api/auth/register"}:
             client = request.client.host if request.client else "unknown"
             if not store.allow_auth_attempt(database, client, int(time.time())):
-                return Response("Too many sign-in attempts. Try again in a minute.", status_code=429,
+                return JSONResponse({"detail": "Too many sign-in attempts. Try again in a minute."}, status_code=429,
                                 headers={"Retry-After": "60", "Cache-Control": "no-store"})
         response = await call_next(request)
         if request.url.path.startswith("/api/"):

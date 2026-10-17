@@ -23,7 +23,9 @@ async function main() {
     let status = 200;
     let payload;
     if (path === '/api/auth/me') { status = 401; payload = {detail: 'Please sign in.'}; }
-    else if (path === '/api/auth/login' && mode === 'signed-out') {
+    else if (path === '/api/auth/login' && mode === 'throttled') {
+      status = 429; payload = {detail: 'Too many sign-in attempts. Try again in a minute.'};
+    } else if (path === '/api/auth/login' && mode === 'signed-out') {
       status = 401; payload = {detail: 'Invalid username or password.'};
     } else if (path === '/api/auth/register') { mode = 'signed-in'; payload = {username: 'alice'}; }
     else if (path === '/api/auth/logout') {
@@ -49,6 +51,13 @@ async function main() {
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('notice').textContent, 'Invalid username or password.');
+  assert.equal(buttons.every(button => !button.disabled), true);
+  mode = 'throttled';
+  await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
+  assert.equal(node('notice').textContent, 'Too many sign-in attempts. Try again in a minute.');
+  assert.equal(node('notice').hidden, false);
+  assert.equal(node('notice').className, 'notice error');
+  assert.equal(node('tracker').hidden, true);
   assert.equal(buttons.every(button => !button.disabled), true);
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'register'}});
   assert.equal(node('tracker').hidden, false);
