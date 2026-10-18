@@ -112,6 +112,15 @@ byId("application-form").addEventListener("submit", async (event) => {
 });
 
 let debounce;
+byId("clear-filters").addEventListener("click", async () => {
+  clearTimeout(debounce);
+  byId("search").value = "";
+  byId("stage").value = "";
+  try {
+    await load();
+    notify("");
+  } catch (error) { notify(error.message, true); }
+});
 byId("export-csv").addEventListener("click", () => {
   const link = element("a");
   link.href = `/api/applications/export?${filterParameters()}`;

@@ -19,6 +19,8 @@ async function main() {
   }
   let mode = 'signed-out';
   let failLogout = false;
+  let failList = false;
+  const listRequests = [];
   const fetch = async (path, options = {}) => {
     if (options.method === 'POST') assert.equal(options.headers['X-JobTrack'], '1');
     let status = 200;
@@ -33,6 +35,8 @@ async function main() {
       status = failLogout ? 500 : 204; payload = {detail: 'Try again.'};
     } else if (mode === 'expired') { status = 401; payload = {detail: 'Please sign in.'}; }
     else if (path.startsWith('/api/applications')) {
+      listRequests.push(path);
+      if (failList) return {ok: false, status: 500, json: async () => ({detail: 'Could not load applications.'})};
       payload = [{company: 'Private Company', role: 'Engineer', status: 'saved', id: 1}];
     } else if (path === '/api/stats') { payload = {total: 1, by_status: {applied: 0, interview: 0, offer: 0}}; }
     else throw new Error(`Unexpected request: ${path}`);
@@ -80,6 +84,24 @@ async function main() {
   assert.equal(node('auth-panel').hidden, true);
   assert.equal(node('account-name').textContent, 'Signed in as alice');
   assert.equal(node('total').textContent, 1);
+  node('search').value = 'Private & Co';
+  node('stage').value = 'interview';
+  handlers['search:input']();
+  const requestsBeforeClear = listRequests.length;
+  await handlers['clear-filters:click']();
+  assert.equal(node('search').value, '');
+  assert.equal(node('stage').value, '');
+  const clearedUrl = new URL(listRequests.at(-1), 'http://localhost');
+  assert.equal(clearedUrl.searchParams.get('search'), '');
+  assert.equal(clearedUrl.searchParams.has('status'), false);
+  assert.equal(node('notice').hidden, true);
+  await new Promise(resolve => setTimeout(resolve, 250));
+  assert.equal(listRequests.length, requestsBeforeClear + 1);
+  failList = true;
+  await handlers['clear-filters:click']();
+  assert.equal(node('notice').textContent, 'Could not load applications.');
+  assert.equal(node('notice').className, 'notice error');
+  failList = false;
   failLogout = true;
   await handlers['logout:click']();
   assert.equal(node('tracker').hidden, false);
