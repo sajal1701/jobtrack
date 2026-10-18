@@ -122,7 +122,18 @@ byId("export-csv").addEventListener("click", () => {
 });
 byId("search").addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(() => load().catch((error) => notify(error.message, true)), 200); });
 byId("stage").addEventListener("change", () => load().catch((error) => notify(error.message, true)));
+function setPasswordVisibility(visible) {
+  byId("auth-password").type = visible ? "text" : "password";
+  byId("toggle-password").textContent = visible ? "Hide password" : "Show password";
+  byId("toggle-password").setAttribute("aria-pressed", String(visible));
+}
+
+byId("toggle-password").addEventListener("click", () => {
+  setPasswordVisibility(byId("auth-password").type === "password");
+});
+
 function showAccount(user) {
+  setPasswordVisibility(false);
   ++loadVersion;
   byId("auth-panel").hidden = Boolean(user);
   byId("tracker").hidden = !user;

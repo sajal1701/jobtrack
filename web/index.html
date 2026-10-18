@@ -13,7 +13,8 @@
       <h2>Sign in or create an account</h2>
       <form id="auth-form">
         <label>Username<input name="username" required minlength="3" maxlength="50" pattern="[a-zA-Z0-9_-]+" autocomplete="username"></label>
-        <label>Password<input name="password" type="password" required minlength="12" maxlength="128" autocomplete="current-password"></label>
+        <label>Password<input id="auth-password" name="password" type="password" required minlength="12" maxlength="128" autocomplete="current-password"></label>
+        <button id="toggle-password" type="button" aria-controls="auth-password" aria-pressed="false">Show password</button>
         <p class="subtle">Use 3–50 letters, numbers, underscores, or hyphens for your username and 12–128 characters for your password.</p>
         <button type="submit" value="login">Sign in</button>
         <button type="submit" value="register">Create account</button>

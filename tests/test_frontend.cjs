@@ -12,7 +12,8 @@ async function main() {
       addEventListener(event, callback) { handlers[`${id}:${event}`] = callback; },
       replaceChildren(...children) { this.children = children; },
       append(...children) { this.children.push(...children); },
-      setAttribute() {}, reset() { this.values = {}; },
+      attributes: {},
+      setAttribute(name, value) { this.attributes[name] = value; }, reset() { this.values = {}; },
       querySelectorAll() { return buttons; },
     };
   }
@@ -46,6 +47,18 @@ async function main() {
   await new Promise(setImmediate);
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('auth-panel').hidden, false);
+  const password = node('auth-password');
+  password.value = 'a-long-test-password';
+  assert.equal(password.type, 'password');
+  handlers['toggle-password:click']();
+  assert.equal(password.type, 'text');
+  assert.equal(password.value, 'a-long-test-password');
+  assert.equal(node('toggle-password').textContent, 'Hide password');
+  assert.equal(node('toggle-password').attributes['aria-pressed'], 'true');
+  handlers['toggle-password:click']();
+  assert.equal(password.type, 'password');
+  assert.equal(node('toggle-password').textContent, 'Show password');
+  assert.equal(node('toggle-password').attributes['aria-pressed'], 'false');
   const form = node('auth-form');
   form.values = {username: 'alice', password: 'a-long-test-password'};
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
@@ -59,7 +72,10 @@ async function main() {
   assert.equal(node('notice').className, 'notice error');
   assert.equal(node('tracker').hidden, true);
   assert.equal(buttons.every(button => !button.disabled), true);
+  handlers['toggle-password:click']();
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'register'}});
+  assert.equal(password.type, 'password');
+  assert.equal(node('toggle-password').attributes['aria-pressed'], 'false');
   assert.equal(node('tracker').hidden, false);
   assert.equal(node('auth-panel').hidden, true);
   assert.equal(node('account-name').textContent, 'Signed in as alice');
@@ -69,7 +85,9 @@ async function main() {
   assert.equal(node('tracker').hidden, false);
   assert.equal(node('notice').textContent, 'Try again.');
   failLogout = false;
+  vm.runInContext('setPasswordVisibility(true)', context);
   await handlers['logout:click']();
+  assert.equal(password.type, 'password');
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('applications').children.length, 0);
   assert.equal(node('total').textContent, '0');
