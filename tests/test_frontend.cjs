@@ -20,8 +20,10 @@ async function main() {
   let mode = 'signed-out';
   let failLogout = false;
   let failList = false;
+  let networkFailure = false;
   const listRequests = [];
   const fetch = async (path, options = {}) => {
+    if (networkFailure) throw new TypeError('Failed to fetch');
     if (options.method === 'POST') assert.equal(options.headers['X-JobTrack'], '1');
     let status = 200;
     let payload;
@@ -69,6 +71,16 @@ async function main() {
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('notice').textContent, 'Invalid username or password.');
   assert.equal(buttons.every(button => !button.disabled), true);
+  networkFailure = true;
+  const connectionMessage = 'Could not connect to JobTrack. Check that the server is running and try again.';
+  await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
+  assert.equal(node('notice').textContent, connectionMessage);
+  assert.equal(node('notice').hidden, false);
+  assert.equal(node('notice').className, 'notice error');
+  assert.equal(form.values.username, 'alice');
+  assert.equal(form.values.password, 'a-long-test-password');
+  assert.equal(buttons.every(button => !button.disabled), true);
+  networkFailure = false;
   mode = 'throttled';
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
   assert.equal(node('notice').textContent, 'Too many sign-in attempts. Try again in a minute.');
@@ -102,6 +114,13 @@ async function main() {
   assert.equal(node('notice').textContent, 'Could not load applications.');
   assert.equal(node('notice').className, 'notice error');
   failList = false;
+  networkFailure = true;
+  await handlers['logout:click']();
+  assert.equal(node('notice').textContent, connectionMessage);
+  assert.equal(node('tracker').hidden, false);
+  assert.equal(node('account-name').textContent, 'Signed in as alice');
+  assert.equal(node('logout').disabled, false);
+  networkFailure = false;
   failLogout = true;
   await handlers['logout:click']();
   assert.equal(node('tracker').hidden, false);

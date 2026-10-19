@@ -10,10 +10,15 @@ function notify(message, error = false) {
 }
 
 async function request(path, options = {}) {
-  const response = await fetch(path, {
-    ...options,
-    headers: { "Content-Type": "application/json", "X-JobTrack": "1", ...options.headers },
-  });
+  let response;
+  try {
+    response = await fetch(path, {
+      ...options,
+      headers: { "Content-Type": "application/json", "X-JobTrack": "1", ...options.headers },
+    });
+  } catch {
+    throw new Error("Could not connect to JobTrack. Check that the server is running and try again.");
+  }
   if (!response.ok) {
     if (response.status === 401) showAccount(null);
     const payload = await response.json().catch(() => ({}));
