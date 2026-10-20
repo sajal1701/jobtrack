@@ -21,6 +21,8 @@ async function main() {
   let failLogout = false;
   let failList = false;
   let networkFailure = false;
+  let emptyList = false;
+  let total = 1;
   const listRequests = [];
   const fetch = async (path, options = {}) => {
     if (networkFailure) throw new TypeError('Failed to fetch');
@@ -39,13 +41,13 @@ async function main() {
     else if (path.startsWith('/api/applications')) {
       listRequests.push(path);
       if (failList) return {ok: false, status: 500, json: async () => ({detail: 'Could not load applications.'})};
-      payload = [{company: 'Private Company', role: 'Engineer', status: 'saved', id: 1}];
-    } else if (path === '/api/stats') { payload = {total: 1, by_status: {applied: 0, interview: 0, offer: 0}}; }
+      payload = emptyList ? [] : [{company: 'Private Company', role: 'Engineer', status: 'saved', id: 1}];
+    } else if (path === '/api/stats') { payload = {total, by_status: {applied: 0, interview: 0, offer: 0}}; }
     else throw new Error(`Unexpected request: ${path}`);
     return {ok: status < 400, status, json: async () => payload};
   };
   const context = vm.createContext({
-    document: {getElementById: node, createElement: () => ({...node(Symbol()), addEventListener() {}})},
+    document: {getElementById: node, createElement: (tagName) => ({...node(Symbol()), tagName, addEventListener() {}})},
     fetch, URLSearchParams, setTimeout, clearTimeout,
     FormData: class { constructor(form) { return Object.entries(form.values || {}); } },
   });
@@ -96,6 +98,20 @@ async function main() {
   assert.equal(node('auth-panel').hidden, true);
   assert.equal(node('account-name').textContent, 'Signed in as alice');
   assert.equal(node('total').textContent, 1);
+  emptyList = true;
+  total = 0;
+  await vm.runInContext('load()', context);
+  assert.equal(node('applications').children[0].textContent,
+    'No applications yet. Add your first opportunity using the form.');
+  total = 1;
+  node('search').value = 'No match';
+  await vm.runInContext('load()', context);
+  assert.equal(node('applications').children[0].textContent,
+    'No applications match these filters. Try another search or use Clear filters.');
+  assert.equal(node('total').textContent, 1);
+  emptyList = false;
+  await handlers['clear-filters:click']();
+  assert.equal(node('applications').children[0].tagName, 'article');
   node('search').value = 'Private & Co';
   node('stage').value = 'interview';
   handlers['search:input']();

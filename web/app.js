@@ -57,7 +57,10 @@ async function load() {
   const container = byId("applications");
   container.replaceChildren();
   if (!applications.length) {
-    container.append(element("p", "No matching applications yet. Add your first opportunity or adjust your filters.", "empty"));
+    const message = stats.total === 0
+      ? "No applications yet. Add your first opportunity using the form."
+      : "No applications match these filters. Try another search or use Clear filters.";
+    container.append(element("p", message, "empty"));
     return;
   }
   for (const application of applications) {
