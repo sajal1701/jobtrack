@@ -24,8 +24,10 @@ async function main() {
   let emptyList = false;
   let total = 1;
   const listRequests = [];
+  const authRequests = [];
   const fetch = async (path, options = {}) => {
     if (networkFailure) throw new TypeError('Failed to fetch');
+    if (options.method === 'POST' && path.startsWith('/api/auth/')) authRequests.push(path);
     if (options.method === 'POST') assert.equal(options.headers['X-JobTrack'], '1');
     let status = 200;
     let payload;
@@ -73,6 +75,13 @@ async function main() {
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('notice').textContent, 'Invalid username or password.');
   assert.equal(buttons.every(button => !button.disabled), true);
+  for (const submitter of [null, undefined]) {
+    await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter});
+    assert.equal(authRequests.at(-1), '/api/auth/login');
+    assert.equal(node('notice').textContent, 'Invalid username or password.');
+    assert.equal(node('tracker').hidden, true);
+    assert.equal(buttons.every(button => !button.disabled), true);
+  }
   networkFailure = true;
   const connectionMessage = 'Could not connect to JobTrack. Check that the server is running and try again.';
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
@@ -92,6 +101,7 @@ async function main() {
   assert.equal(buttons.every(button => !button.disabled), true);
   handlers['toggle-password:click']();
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'register'}});
+  assert.equal(authRequests.at(-1), '/api/auth/register');
   assert.equal(password.type, 'password');
   assert.equal(node('toggle-password').attributes['aria-pressed'], 'false');
   assert.equal(node('tracker').hidden, false);

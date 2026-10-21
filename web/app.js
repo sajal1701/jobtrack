@@ -165,7 +165,7 @@ function showAccount(user) {
 byId("auth-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
-  const action = event.submitter.value;
+  const action = event.submitter?.value === "register" ? "register" : "login";
   const buttons = form.querySelectorAll("button");
   buttons.forEach((button) => { button.disabled = true; });
   try {
