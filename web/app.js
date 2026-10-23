@@ -52,6 +52,11 @@ async function load() {
     request(`/api/applications?${parameters}`), request("/api/stats"),
   ]);
   if (version !== loadVersion) return;
+  const count = applications.length;
+  const summary = count === 100
+    ? "Showing the first 100 matching applications."
+    : `Showing ${count} matching application${count === 1 ? "" : "s"}.`;
+  byId("application-summary").textContent = `${summary} Statistics cover your whole tracker.`;
   byId("total").textContent = stats.total;
   for (const key of ["applied", "interview", "offer"]) byId(key).textContent = stats.by_status[key];
   const container = byId("applications");
@@ -150,6 +155,7 @@ byId("toggle-password").addEventListener("click", () => {
 });
 
 function showAccount(user) {
+  byId("application-summary").textContent = "";
   setPasswordVisibility(false);
   ++loadVersion;
   byId("auth-panel").hidden = Boolean(user);

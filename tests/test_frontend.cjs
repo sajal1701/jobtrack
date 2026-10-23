@@ -22,6 +22,7 @@ async function main() {
   let failList = false;
   let networkFailure = false;
   let emptyList = false;
+  let listSize = 1;
   let total = 1;
   const listRequests = [];
   const authRequests = [];
@@ -43,7 +44,8 @@ async function main() {
     else if (path.startsWith('/api/applications')) {
       listRequests.push(path);
       if (failList) return {ok: false, status: 500, json: async () => ({detail: 'Could not load applications.'})};
-      payload = emptyList ? [] : [{company: 'Private Company', role: 'Engineer', status: 'saved', id: 1}];
+      payload = emptyList ? [] : Array.from({length: listSize}, (_, index) =>
+        ({company: 'Private Company', role: 'Engineer', status: 'saved', id: index + 1}));
     } else if (path === '/api/stats') { payload = {total, by_status: {applied: 0, interview: 0, offer: 0}}; }
     else throw new Error(`Unexpected request: ${path}`);
     return {ok: status < 400, status, json: async () => payload};
@@ -108,9 +110,23 @@ async function main() {
   assert.equal(node('auth-panel').hidden, true);
   assert.equal(node('account-name').textContent, 'Signed in as alice');
   assert.equal(node('total').textContent, 1);
+  assert.equal(node('application-summary').textContent,
+    'Showing 1 matching application. Statistics cover your whole tracker.');
+  listSize = 100;
+  total = 125;
+  await vm.runInContext('load()', context);
+  assert.equal(node('application-summary').textContent,
+    'Showing the first 100 matching applications. Statistics cover your whole tracker.');
+  listSize = 2;
+  await vm.runInContext('load()', context);
+  assert.equal(node('application-summary').textContent,
+    'Showing 2 matching applications. Statistics cover your whole tracker.');
+  listSize = 1;
   emptyList = true;
   total = 0;
   await vm.runInContext('load()', context);
+  assert.equal(node('application-summary').textContent,
+    'Showing 0 matching applications. Statistics cover your whole tracker.');
   assert.equal(node('applications').children[0].textContent,
     'No applications yet. Add your first opportunity using the form.');
   total = 1;
@@ -158,6 +174,7 @@ async function main() {
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('applications').children.length, 0);
   assert.equal(node('total').textContent, '0');
+  assert.equal(node('application-summary').textContent, '');
   vm.runInContext('showAccount({username:"alice"})', context);
   mode = 'expired';
   await vm.runInContext('load().catch(() => {})', context);
