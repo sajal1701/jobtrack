@@ -15,6 +15,7 @@ async function main() {
       attributes: {},
       setAttribute(name, value) { this.attributes[name] = value; }, reset() { this.values = {}; },
       querySelectorAll() { return buttons; },
+      querySelector() { return node('save-button'); },
     };
   }
   let mode = 'signed-out';
@@ -29,11 +30,19 @@ async function main() {
   let confirmDelete = true;
   let deleteRequests = 0;
   let resolveDelete;
+  let createRequests = 0;
+  let resolveCreate;
+  let createPayload;
   const fetch = async (path, options = {}) => {
     if (networkFailure) throw new TypeError('Failed to fetch');
     if (options.method === 'DELETE') {
       deleteRequests++;
       return new Promise(resolve => { resolveDelete = resolve; });
+    }
+    if (options.method === 'POST' && path === '/api/applications') {
+      createRequests++;
+      createPayload = JSON.parse(options.body);
+      return new Promise(resolve => { resolveCreate = resolve; });
     }
     if (options.method === 'POST' && path.startsWith('/api/auth/')) authRequests.push(path);
     if (options.method === 'POST') assert.equal(options.headers['X-JobTrack'], '1');
@@ -121,6 +130,29 @@ async function main() {
   assert.equal(node('auth-panel').hidden, true);
   assert.equal(node('account-name').textContent, 'Signed in as alice');
   assert.equal(node('total').textContent, 1);
+  const applicationForm = node('application-form');
+  applicationForm.values = {company: 'New Company', role: 'Engineer', follow_up_date: ''};
+  const submitApplication = () => handlers['application-form:submit']({preventDefault() {}, currentTarget: applicationForm});
+  const pendingSave = submitApplication();
+  assert.equal(node('save-button').disabled, true);
+  assert.equal(node('save-button').textContent, 'Saving…');
+  assert.equal(createPayload.follow_up_date, null);
+  await submitApplication();
+  assert.equal(createRequests, 1);
+  resolveCreate({ok: false, status: 500, json: async () => ({detail: 'Could not save application.'})});
+  await pendingSave;
+  assert.equal(applicationForm.values.company, 'New Company');
+  assert.equal(node('notice').textContent, 'Could not save application.');
+  assert.equal(node('save-button').disabled, false);
+  assert.equal(node('save-button').textContent, 'Save application');
+  const retriedSave = submitApplication();
+  assert.equal(createRequests, 2);
+  resolveCreate({ok: true, status: 201, json: async () => ({id: 2})});
+  await retriedSave;
+  assert.deepEqual(applicationForm.values, {});
+  assert.equal(node('notice').textContent, 'Application saved.');
+  assert.equal(node('save-button').disabled, false);
+  assert.equal(node('save-button').textContent, 'Save application');
   const remove = node('applications').children[0].children.at(-1).children.at(-1);
   confirmDelete = false;
   await remove.events.click();

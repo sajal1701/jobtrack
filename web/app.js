@@ -118,14 +118,16 @@ byId("application-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const form = event.currentTarget;
   const button = form.querySelector("button[type=submit]");
+  if (button.disabled) return;
   const values = Object.fromEntries(new FormData(form));
   values.follow_up_date = values.follow_up_date || null;
   button.disabled = true;
+  button.textContent = "Saving…";
   try {
     await request("/api/applications", { method: "POST", body: JSON.stringify(values) });
     form.reset(); await load(); notify("Application saved.");
   } catch (error) { notify(error.message, true); }
-  finally { button.disabled = false; }
+  finally { button.disabled = false; button.textContent = "Save application"; }
 });
 
 let debounce;
