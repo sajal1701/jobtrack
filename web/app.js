@@ -102,9 +102,13 @@ async function load() {
     const remove = element("button", "Delete", "text-button");
     remove.type = "button";
     remove.addEventListener("click", async () => {
+      if (remove.disabled) return;
       if (!window.confirm(`Delete the application for ${application.company}?`)) return;
+      remove.disabled = true;
+      remove.textContent = "Deleting…";
       try { await request(`/api/applications/${application.id}`, { method: "DELETE" }); await load(); notify("Application deleted."); }
       catch (error) { notify(error.message, true); }
+      finally { remove.disabled = false; remove.textContent = "Delete"; }
     });
     actions.append(remove); card.append(actions); container.append(card);
   }

@@ -26,8 +26,15 @@ async function main() {
   let total = 1;
   const listRequests = [];
   const authRequests = [];
+  let confirmDelete = true;
+  let deleteRequests = 0;
+  let resolveDelete;
   const fetch = async (path, options = {}) => {
     if (networkFailure) throw new TypeError('Failed to fetch');
+    if (options.method === 'DELETE') {
+      deleteRequests++;
+      return new Promise(resolve => { resolveDelete = resolve; });
+    }
     if (options.method === 'POST' && path.startsWith('/api/auth/')) authRequests.push(path);
     if (options.method === 'POST') assert.equal(options.headers['X-JobTrack'], '1');
     let status = 200;
@@ -51,7 +58,11 @@ async function main() {
     return {ok: status < 400, status, json: async () => payload};
   };
   const context = vm.createContext({
-    document: {getElementById: node, createElement: (tagName) => ({...node(Symbol()), tagName, addEventListener() {}})},
+    document: {getElementById: node, createElement: (tagName) => ({
+      ...node(Symbol()), tagName, events: {},
+      addEventListener(name, callback) { this.events[name] = callback; },
+    })},
+    window: {confirm: () => confirmDelete},
     fetch, URLSearchParams, setTimeout, clearTimeout,
     FormData: class { constructor(form) { return Object.entries(form.values || {}); } },
   });
@@ -110,6 +121,33 @@ async function main() {
   assert.equal(node('auth-panel').hidden, true);
   assert.equal(node('account-name').textContent, 'Signed in as alice');
   assert.equal(node('total').textContent, 1);
+  const remove = node('applications').children[0].children.at(-1).children.at(-1);
+  confirmDelete = false;
+  await remove.events.click();
+  assert.equal(deleteRequests, 0);
+  confirmDelete = true;
+  const pendingDelete = remove.events.click();
+  assert.equal(remove.disabled, true);
+  assert.equal(remove.textContent, 'Deleting…');
+  await remove.events.click();
+  assert.equal(deleteRequests, 1);
+  resolveDelete({ok: false, status: 500, json: async () => ({detail: 'Could not delete application.'})});
+  await pendingDelete;
+  assert.equal(remove.disabled, false);
+  assert.equal(remove.textContent, 'Delete');
+  assert.equal(node('notice').textContent, 'Could not delete application.');
+  assert.equal(node('applications').children.length, 1);
+  const retryDelete = remove.events.click();
+  assert.equal(deleteRequests, 2);
+  emptyList = true;
+  total = 0;
+  resolveDelete({ok: true, status: 204});
+  await retryDelete;
+  assert.equal(node('notice').textContent, 'Application deleted.');
+  assert.equal(node('total').textContent, 0);
+  emptyList = false;
+  total = 1;
+  await vm.runInContext('load()', context);
   assert.equal(node('application-summary').textContent,
     'Showing 1 matching application. Statistics cover your whole tracker.');
   listSize = 100;
