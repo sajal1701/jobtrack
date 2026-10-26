@@ -131,7 +131,7 @@ byId("application-form").addEventListener("submit", async (event) => {
 });
 
 let debounce;
-byId("clear-filters").addEventListener("click", async () => {
+async function clearFilters() {
   clearTimeout(debounce);
   byId("search").value = "";
   byId("stage").value = "";
@@ -139,6 +139,12 @@ byId("clear-filters").addEventListener("click", async () => {
     await load();
     notify("");
   } catch (error) { notify(error.message, true); }
+}
+byId("clear-filters").addEventListener("click", clearFilters);
+byId("search").addEventListener("keydown", async (event) => {
+  if (event.key !== "Escape") return;
+  event.preventDefault();
+  await clearFilters();
 });
 byId("export-csv").addEventListener("click", () => {
   const link = element("a");

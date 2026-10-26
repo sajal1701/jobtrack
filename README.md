@@ -58,6 +58,7 @@ the same account next time. Password reset is not available yet.
 
 Use **Search company or role** and **All stages** to find applications.
 Click **Clear filters** to reset both filters and show all applications again.
+You can also press **Escape** while the search field is focused.
 The summary counts cover your whole tracker, even when filters are active.
 Click **View role** to open a saved job link. **Delete** asks for confirmation
 before removing the record; there is no undo.
