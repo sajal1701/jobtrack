@@ -238,12 +238,18 @@ async function main() {
   assert.equal(node('tracker').hidden, false);
   assert.equal(node('notice').textContent, 'Try again.');
   failLogout = false;
+  node('search').value = 'Pending search';
+  handlers['search:input']();
+  const requestsBeforeLogout = listRequests.length;
   vm.runInContext('setPasswordVisibility(true)', context);
   await handlers['logout:click']();
   assert.equal(password.type, 'password');
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('applications').children.length, 0);
   assert.equal(node('total').textContent, '0');
+  await new Promise(resolve => setTimeout(resolve, 250));
+  assert.equal(listRequests.length, requestsBeforeLogout);
+  assert.equal(node('notice').textContent, 'Signed out.');
   assert.equal(node('application-summary').textContent, '');
   vm.runInContext('showAccount({username:"alice"})', context);
   mode = 'expired';

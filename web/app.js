@@ -161,6 +161,7 @@ byId("toggle-password").addEventListener("click", () => {
 });
 
 function showAccount(user) {
+  clearTimeout(debounce);
   byId("application-summary").textContent = "";
   setPasswordVisibility(false);
   ++loadVersion;
