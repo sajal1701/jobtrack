@@ -21,6 +21,7 @@ async function main() {
   let mode = 'signed-out';
   let failLogout = false;
   let failList = false;
+  let unreadableList = false;
   let networkFailure = false;
   let emptyList = false;
   let listSize = 1;
@@ -63,6 +64,7 @@ async function main() {
     else if (path.startsWith('/api/applications')) {
       listRequests.push(path);
       if (failList) return {ok: false, status: 500, json: async () => ({detail: 'Could not load applications.'})};
+      if (unreadableList) return {ok: true, status: 200, json: async () => { throw new SyntaxError('Unexpected token <'); }};
       payload = emptyList ? [] : Array.from({length: listSize}, (_, index) =>
         ({company: 'Private Company', role: 'Engineer', status: 'saved', id: index + 1}));
     } else if (path === '/api/stats') { payload = {total, by_status: {applied: 0, interview: 0, offer: 0}}; }
@@ -252,6 +254,16 @@ async function main() {
   assert.equal(new URL(listRequests.at(-1), 'http://localhost').searchParams.has('status'), false);
   await new Promise(resolve => setTimeout(resolve, 250));
   assert.equal(listRequests.length, requestsBeforeEscape + 1);
+  const previousCard = node('applications').children[0];
+  unreadableList = true;
+  await handlers['refresh:click']();
+  assert.equal(node('notice').textContent,
+    'JobTrack returned an unreadable response. Refresh to check the latest data.');
+  assert.equal(node('notice').className, 'notice error');
+  assert.equal(node('applications').children[0], previousCard);
+  assert.equal(node('refresh').disabled, false);
+  assert.equal(node('refresh').textContent, 'Refresh');
+  unreadableList = false;
   failList = true;
   await handlers['clear-filters:click']();
   assert.equal(node('notice').textContent, 'Could not load applications.');

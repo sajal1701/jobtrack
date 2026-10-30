@@ -28,7 +28,12 @@ async function request(path, options = {}) {
       : detail || "The request failed. Please try again.";
     throw new Error(message);
   }
-  return response.status === 204 ? null : response.json();
+  if (response.status === 204) return null;
+  try {
+    return await response.json();
+  } catch {
+    throw new Error("JobTrack returned an unreadable response. Refresh to check the latest data.");
+  }
 }
 
 function element(tag, text, className = "") {
