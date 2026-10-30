@@ -193,9 +193,13 @@ function showAccount(user) {
   byId("stage").value = "";
 }
 
+let authPending = false;
 byId("auth-form").addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (authPending) return;
+  authPending = true;
   const form = event.currentTarget;
+  form.setAttribute("aria-busy", "true");
   const action = event.submitter?.value === "register" ? "register" : "login";
   const buttons = form.querySelectorAll("button");
   buttons.forEach((button) => { button.disabled = true; });
@@ -208,7 +212,11 @@ byId("auth-form").addEventListener("submit", async (event) => {
     await load();
     notify("Signed in.");
   } catch (error) { notify(error.message, true); }
-  finally { buttons.forEach((button) => { button.disabled = false; }); }
+  finally {
+    authPending = false;
+    form.setAttribute("aria-busy", "false");
+    buttons.forEach((button) => { button.disabled = false; });
+  }
 });
 
 byId("logout").addEventListener("click", async () => {

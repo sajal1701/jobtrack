@@ -27,6 +27,8 @@ async function main() {
   let total = 1;
   const listRequests = [];
   const authRequests = [];
+  let deferLogin = false;
+  let resolveLogin;
   let confirmDelete = true;
   let deleteRequests = 0;
   let resolveDelete;
@@ -45,6 +47,7 @@ async function main() {
       return new Promise(resolve => { resolveCreate = resolve; });
     }
     if (options.method === 'POST' && path.startsWith('/api/auth/')) authRequests.push(path);
+    if (deferLogin && path === '/api/auth/login') return new Promise(resolve => { resolveLogin = resolve; });
     if (options.method === 'POST') assert.equal(options.headers['X-JobTrack'], '1');
     let status = 200;
     let payload;
@@ -93,6 +96,19 @@ async function main() {
   assert.equal(node('toggle-password').attributes['aria-pressed'], 'false');
   const form = node('auth-form');
   form.values = {username: 'alice', password: 'a-long-test-password'};
+  deferLogin = true;
+  const pendingLogin = handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
+  assert.equal(form.attributes['aria-busy'], 'true');
+  assert.equal(buttons.every(button => button.disabled), true);
+  const requestsDuringLogin = authRequests.length;
+  await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'register'}});
+  assert.equal(authRequests.length, requestsDuringLogin);
+  resolveLogin({ok: false, status: 401, json: async () => ({detail: 'Invalid username or password.'})});
+  await pendingLogin;
+  assert.equal(form.attributes['aria-busy'], 'false');
+  assert.equal(buttons.every(button => !button.disabled), true);
+  assert.equal(form.values.username, 'alice');
+  deferLogin = false;
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('notice').textContent, 'Invalid username or password.');
