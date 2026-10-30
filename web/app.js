@@ -131,6 +131,18 @@ byId("application-form").addEventListener("submit", async (event) => {
 });
 
 let debounce;
+byId("refresh").addEventListener("click", async () => {
+  const button = byId("refresh");
+  if (button.disabled) return;
+  clearTimeout(debounce);
+  button.disabled = true;
+  button.textContent = "Refreshing…";
+  try {
+    await load();
+    notify("Applications refreshed.");
+  } catch (error) { notify(error.message, true); }
+  finally { button.disabled = false; button.textContent = "Refresh"; }
+});
 async function clearFilters() {
   clearTimeout(debounce);
   byId("search").value = "";
