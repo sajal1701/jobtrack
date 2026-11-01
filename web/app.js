@@ -87,12 +87,20 @@ async function load() {
       select.append(option);
     }
     select.addEventListener("change", async () => {
+      if (select.disabled) return;
       select.disabled = true;
+      const newStatus = select.value;
+      let saved = false;
       try {
-        await request(`/api/applications/${application.id}`, { method: "PATCH", body: JSON.stringify({ status: select.value }) });
+        await request(`/api/applications/${application.id}`, { method: "PATCH", body: JSON.stringify({ status: newStatus }) });
+        application.status = newStatus;
+        saved = true;
         await load();
         notify("Application stage updated.");
-      } catch (error) { select.value = application.status; select.disabled = false; notify(error.message, true); }
+      } catch (error) {
+        select.value = application.status;
+        notify(saved ? "Stage saved, but the list could not refresh. Use Refresh to reload applications." : error.message, true);
+      } finally { select.disabled = false; }
     });
     top.append(heading, select);
     card.append(top);

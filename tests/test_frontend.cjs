@@ -36,8 +36,14 @@ async function main() {
   let createRequests = 0;
   let resolveCreate;
   let createPayload;
+  let patchRequests = 0;
+  let resolvePatch;
   const fetch = async (path, options = {}) => {
     if (networkFailure) throw new TypeError('Failed to fetch');
+    if (options.method === 'PATCH') {
+      patchRequests++;
+      return new Promise(resolve => { resolvePatch = resolve; });
+    }
     if (options.method === 'DELETE') {
       deleteRequests++;
       return new Promise(resolve => { resolveDelete = resolve; });
@@ -148,6 +154,27 @@ async function main() {
   assert.equal(node('auth-panel').hidden, true);
   assert.equal(node('account-name').textContent, 'Signed in as alice');
   assert.equal(node('total').textContent, 1);
+  const stageSelect = node('applications').children[0].children[0].children[1];
+  stageSelect.value = 'interview';
+  const failedStageChange = stageSelect.events.change();
+  assert.equal(stageSelect.disabled, true);
+  await stageSelect.events.change();
+  assert.equal(patchRequests, 1);
+  resolvePatch({ok: false, status: 500, json: async () => ({detail: 'Stage save failed.'})});
+  await failedStageChange;
+  assert.equal(stageSelect.value, 'saved');
+  assert.equal(stageSelect.disabled, false);
+  assert.equal(node('notice').textContent, 'Stage save failed.');
+  stageSelect.value = 'interview';
+  const savedStageChange = stageSelect.events.change();
+  failList = true;
+  resolvePatch({ok: true, status: 200, json: async () => ({status: 'interview'})});
+  await savedStageChange;
+  assert.equal(stageSelect.value, 'interview');
+  assert.equal(stageSelect.disabled, false);
+  assert.equal(node('notice').textContent,
+    'Stage saved, but the list could not refresh. Use Refresh to reload applications.');
+  failList = false;
   const applicationForm = node('application-form');
   applicationForm.values = {company: 'New Company', role: 'Engineer', follow_up_date: ''};
   const submitApplication = () => handlers['application-form:submit']({preventDefault() {}, currentTarget: applicationForm});
