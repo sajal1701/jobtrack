@@ -136,10 +136,14 @@ byId("application-form").addEventListener("submit", async (event) => {
   values.follow_up_date = values.follow_up_date || null;
   button.disabled = true;
   button.textContent = "Saving…";
+  let saved = false;
   try {
     await request("/api/applications", { method: "POST", body: JSON.stringify(values) });
+    saved = true;
     form.reset(); await load(); notify("Application saved.");
-  } catch (error) { notify(error.message, true); }
+  } catch (error) {
+    notify(saved ? "Application saved, but the list could not refresh. Use Refresh to reload applications." : error.message, true);
+  }
   finally { button.disabled = false; button.textContent = "Save application"; }
 });
 

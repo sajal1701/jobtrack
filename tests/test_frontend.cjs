@@ -196,6 +196,18 @@ async function main() {
   await retriedSave;
   assert.deepEqual(applicationForm.values, {});
   assert.equal(node('notice').textContent, 'Application saved.');
+  applicationForm.values = {company: 'Saved before refresh', role: 'Engineer', follow_up_date: ''};
+  const saveWithFailedRefresh = submitApplication();
+  failList = true;
+  resolveCreate({ok: true, status: 201, json: async () => ({id: 3})});
+  await saveWithFailedRefresh;
+  assert.equal(createRequests, 3);
+  assert.deepEqual(applicationForm.values, {});
+  assert.equal(node('notice').textContent,
+    'Application saved, but the list could not refresh. Use Refresh to reload applications.');
+  assert.equal(node('notice').className, 'notice error');
+  assert.equal(node('save-button').disabled, false);
+  failList = false;
   assert.equal(node('save-button').disabled, false);
   assert.equal(node('save-button').textContent, 'Save application');
   const remove = node('applications').children[0].children.at(-1).children.at(-1);
