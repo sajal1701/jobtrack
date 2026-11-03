@@ -11,7 +11,13 @@ async function main() {
       value: '', hidden: false, textContent: '', children: [],
       addEventListener(event, callback) { handlers[`${id}:${event}`] = callback; },
       replaceChildren(...children) { this.children = children; },
-      append(...children) { this.children.push(...children); },
+      append(...children) {
+        children.forEach(child => { child.parent = this; });
+        this.children.push(...children);
+      },
+      remove() {
+        if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this);
+      },
       attributes: {},
       setAttribute(name, value) { this.attributes[name] = value; }, reset() { this.values = {}; },
       querySelectorAll() { return buttons; },
@@ -236,6 +242,21 @@ async function main() {
   assert.equal(node('total').textContent, 0);
   emptyList = false;
   total = 1;
+  await vm.runInContext('load()', context);
+  const deletedCard = node('applications').children[0];
+  const secondRemove = deletedCard.children.at(-1).children.at(-1);
+  const deleteWithFailedRefresh = secondRemove.events.click();
+  failList = true;
+  resolveDelete({ok: true, status: 204});
+  await deleteWithFailedRefresh;
+  assert.equal(node('applications').children.includes(deletedCard), false);
+  assert.equal(secondRemove.disabled, true);
+  assert.equal(secondRemove.textContent, 'Deleted');
+  assert.equal(node('notice').textContent,
+    'Application deleted, but the list could not refresh. Use Refresh to reload applications.');
+  await secondRemove.events.click();
+  assert.equal(deleteRequests, 3);
+  failList = false;
   await vm.runInContext('load()', context);
   assert.equal(node('application-summary').textContent,
     'Showing 1 matching application. Statistics cover your whole tracker.');

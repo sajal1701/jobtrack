@@ -119,9 +119,16 @@ async function load() {
       if (!window.confirm(`Delete the application for ${application.company}?`)) return;
       remove.disabled = true;
       remove.textContent = "Deleting…";
-      try { await request(`/api/applications/${application.id}`, { method: "DELETE" }); await load(); notify("Application deleted."); }
-      catch (error) { notify(error.message, true); }
-      finally { remove.disabled = false; remove.textContent = "Delete"; }
+      let deleted = false;
+      try {
+        await request(`/api/applications/${application.id}`, { method: "DELETE" });
+        deleted = true;
+        card.remove();
+        await load();
+        notify("Application deleted.");
+      } catch (error) {
+        notify(deleted ? "Application deleted, but the list could not refresh. Use Refresh to reload applications." : error.message, true);
+      } finally { remove.disabled = deleted; remove.textContent = deleted ? "Deleted" : "Delete"; }
     });
     actions.append(remove); card.append(actions); container.append(card);
   }
