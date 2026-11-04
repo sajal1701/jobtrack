@@ -64,7 +64,10 @@ async function main() {
     if (options.method === 'POST') assert.equal(options.headers['X-JobTrack'], '1');
     let status = 200;
     let payload;
-    if (path === '/api/auth/me') { status = 401; payload = {detail: 'Please sign in.'}; }
+    if (path === '/api/auth/me') {
+      if (mode === 'signed-in') payload = {username: 'alice'};
+      else { status = 401; payload = {detail: 'Please sign in.'}; }
+    }
     else if (path === '/api/auth/login' && mode === 'throttled') {
       status = 429; payload = {detail: 'Too many sign-in attempts. Try again in a minute.'};
     } else if (path === '/api/auth/login' && mode === 'signed-out') {
@@ -380,6 +383,21 @@ async function main() {
   await vm.runInContext('load().catch(() => {})', context);
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('applications').children.length, 0);
-  console.log('Frontend authentication checks passed: login failure, registration, logout failure/success, and session expiry.');
+  mode = 'signed-in';
+  failList = true;
+  await vm.runInContext('restoreSession()', context);
+  assert.equal(node('tracker').hidden, false);
+  assert.equal(node('auth-panel').hidden, true);
+  assert.equal(node('account-name').textContent, 'Signed in as alice');
+  assert.equal(node('notice').textContent, 'Could not load applications.');
+  failList = false;
+  await handlers['refresh:click']();
+  assert.equal(node('notice').textContent, 'Applications refreshed.');
+  assert.equal(node('applications').children[0].tagName, 'article');
+  mode = 'signed-out';
+  await vm.runInContext('restoreSession()', context);
+  assert.equal(node('tracker').hidden, true);
+  assert.equal(node('auth-panel').hidden, false);
+  console.log('Frontend checks passed, including session restoration and list-load recovery.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

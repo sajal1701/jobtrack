@@ -254,10 +254,18 @@ byId("logout").addEventListener("click", async () => {
   finally { button.disabled = false; }
 });
 
-request("/api/auth/me").then(async (user) => {
+async function restoreSession() {
+  let user;
+  try {
+    user = await request("/api/auth/me");
+  } catch (error) {
+    showAccount(null);
+    if (error.message !== "Please sign in.") notify(error.message, true);
+    return;
+  }
   showAccount(user);
-  await load();
-}).catch((error) => {
-  showAccount(null);
-  if (error.message !== "Please sign in.") notify(error.message, true);
-});
+  try { await load(); }
+  catch (error) { notify(error.message, true); }
+}
+
+restoreSession();
