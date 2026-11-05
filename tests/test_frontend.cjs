@@ -129,6 +129,8 @@ async function main() {
   await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter: {value: 'login'}});
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('notice').textContent, 'Invalid username or password.');
+  assert.equal(node('notice').attributes.role, 'alert');
+  assert.equal(node('notice').attributes['aria-live'], 'assertive');
   assert.equal(buttons.every(button => !button.disabled), true);
   for (const submitter of [null, undefined]) {
     await handlers['auth-form:submit']({preventDefault() {}, currentTarget: form, submitter});
@@ -205,6 +207,8 @@ async function main() {
   await retriedSave;
   assert.deepEqual(applicationForm.values, {});
   assert.equal(node('notice').textContent, 'Application saved.');
+  assert.equal(node('notice').attributes.role, 'status');
+  assert.equal(node('notice').attributes['aria-live'], 'polite');
   applicationForm.values = {company: 'Saved before refresh', role: 'Engineer', follow_up_date: ''};
   const saveWithFailedRefresh = submitApplication();
   failList = true;
@@ -300,6 +304,8 @@ async function main() {
   assert.equal(clearedUrl.searchParams.get('search'), '');
   assert.equal(clearedUrl.searchParams.has('status'), false);
   assert.equal(node('notice').hidden, true);
+  assert.equal(node('notice').attributes.role, 'status');
+  assert.equal(node('notice').attributes['aria-live'], 'polite');
   await new Promise(resolve => setTimeout(resolve, 250));
   assert.equal(listRequests.length, requestsBeforeClear + 1);
   node('search').value = 'Keyboard search';

@@ -4,6 +4,8 @@ const titleCase = (value) => value[0].toUpperCase() + value.slice(1);
 
 function notify(message, error = false) {
   const notice = byId("notice");
+  notice.setAttribute("role", error ? "alert" : "status");
+  notice.setAttribute("aria-live", error ? "assertive" : "polite");
   notice.textContent = message;
   notice.hidden = !message;
   notice.className = error ? "notice error" : "notice";
