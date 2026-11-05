@@ -6,6 +6,7 @@ async function main() {
   const handlers = {};
   const nodes = {};
   const buttons = [{disabled: false}, {disabled: false}];
+  let focusedId = null;
   function node(id) {
     return nodes[id] ||= {
       value: '', hidden: false, textContent: '', children: [],
@@ -22,6 +23,7 @@ async function main() {
       setAttribute(name, value) { this.attributes[name] = value; }, reset() { this.values = {}; },
       querySelectorAll() { return buttons; },
       querySelector() { return node('save-button'); },
+      focus() { focusedId = id; },
     };
   }
   let mode = 'signed-out';
@@ -189,6 +191,7 @@ async function main() {
   const applicationForm = node('application-form');
   applicationForm.values = {company: 'New Company', role: 'Engineer', follow_up_date: ''};
   const submitApplication = () => handlers['application-form:submit']({preventDefault() {}, currentTarget: applicationForm});
+  focusedId = 'notes';
   const pendingSave = submitApplication();
   assert.equal(node('save-button').disabled, true);
   assert.equal(node('save-button').textContent, 'Saving…');
@@ -197,6 +200,7 @@ async function main() {
   assert.equal(createRequests, 1);
   resolveCreate({ok: false, status: 500, json: async () => ({detail: 'Could not save application.'})});
   await pendingSave;
+  assert.equal(focusedId, 'notes');
   assert.equal(applicationForm.values.company, 'New Company');
   assert.equal(node('notice').textContent, 'Could not save application.');
   assert.equal(node('save-button').disabled, false);
@@ -205,15 +209,18 @@ async function main() {
   assert.equal(createRequests, 2);
   resolveCreate({ok: true, status: 201, json: async () => ({id: 2})});
   await retriedSave;
+  assert.equal(focusedId, 'company');
   assert.deepEqual(applicationForm.values, {});
   assert.equal(node('notice').textContent, 'Application saved.');
   assert.equal(node('notice').attributes.role, 'status');
   assert.equal(node('notice').attributes['aria-live'], 'polite');
   applicationForm.values = {company: 'Saved before refresh', role: 'Engineer', follow_up_date: ''};
+  focusedId = 'notes';
   const saveWithFailedRefresh = submitApplication();
   failList = true;
   resolveCreate({ok: true, status: 201, json: async () => ({id: 3})});
   await saveWithFailedRefresh;
+  assert.equal(focusedId, 'company');
   assert.equal(createRequests, 3);
   assert.deepEqual(applicationForm.values, {});
   assert.equal(node('notice').textContent,

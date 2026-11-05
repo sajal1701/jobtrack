@@ -149,7 +149,10 @@ byId("application-form").addEventListener("submit", async (event) => {
   try {
     await request("/api/applications", { method: "POST", body: JSON.stringify(values) });
     saved = true;
-    form.reset(); await load(); notify("Application saved.");
+    form.reset();
+    byId("company").focus();
+    await load();
+    notify("Application saved.");
   } catch (error) {
     notify(saved ? "Application saved, but the list could not refresh. Use Refresh to reload applications." : error.message, true);
   }
