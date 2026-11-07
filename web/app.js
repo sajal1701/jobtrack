@@ -250,13 +250,15 @@ byId("auth-form").addEventListener("submit", async (event) => {
 
 byId("logout").addEventListener("click", async () => {
   const button = byId("logout");
+  if (button.disabled) return;
   button.disabled = true;
+  button.textContent = "Signing out…";
   try {
     await request("/api/auth/logout", { method: "POST" });
     showAccount(null);
     notify("Signed out.");
   } catch (error) { notify(error.message, true); }
-  finally { button.disabled = false; }
+  finally { button.disabled = false; button.textContent = "Sign out"; }
 });
 
 async function restoreSession() {

@@ -28,6 +28,8 @@ async function main() {
   }
   let mode = 'signed-out';
   let failLogout = false;
+  let deferLogout = false;
+  let resolveLogout;
   let failList = false;
   let unreadableList = false;
   let networkFailure = false;
@@ -76,6 +78,7 @@ async function main() {
       status = 401; payload = {detail: 'Invalid username or password.'};
     } else if (path === '/api/auth/register') { mode = 'signed-in'; payload = {username: 'alice'}; }
     else if (path === '/api/auth/logout') {
+      if (deferLogout) return new Promise(resolve => { resolveLogout = resolve; });
       status = failLogout ? 500 : 204; payload = {detail: 'Try again.'};
     } else if (mode === 'expired') { status = 401; payload = {detail: 'Please sign in.'}; }
     else if (path.startsWith('/api/applications')) {
@@ -374,7 +377,18 @@ async function main() {
   assert.equal(node('logout').disabled, false);
   networkFailure = false;
   failLogout = true;
+  deferLogout = true;
+  const pendingLogout = handlers['logout:click']();
+  assert.equal(node('logout').disabled, true);
+  assert.equal(node('logout').textContent, 'Signing out…');
+  const requestsDuringLogout = authRequests.length;
   await handlers['logout:click']();
+  assert.equal(authRequests.length, requestsDuringLogout);
+  resolveLogout({ok: false, status: 500, json: async () => ({detail: 'Try again.'})});
+  await pendingLogout;
+  assert.equal(node('logout').disabled, false);
+  assert.equal(node('logout').textContent, 'Sign out');
+  deferLogout = false;
   assert.equal(node('tracker').hidden, false);
   assert.equal(node('notice').textContent, 'Try again.');
   failLogout = false;
@@ -390,6 +404,8 @@ async function main() {
   await new Promise(resolve => setTimeout(resolve, 250));
   assert.equal(listRequests.length, requestsBeforeLogout);
   assert.equal(node('notice').textContent, 'Signed out.');
+  assert.equal(node('logout').disabled, false);
+  assert.equal(node('logout').textContent, 'Sign out');
   assert.equal(node('application-summary').textContent, '');
   vm.runInContext('showAccount({username:"alice"})', context);
   mode = 'expired';
