@@ -86,7 +86,7 @@ async function main() {
       if (failList) return {ok: false, status: 500, json: async () => ({detail: 'Could not load applications.'})};
       if (unreadableList) return {ok: true, status: 200, json: async () => { throw new SyntaxError('Unexpected token <'); }};
       payload = emptyList ? [] : Array.from({length: listSize}, (_, index) =>
-        ({company: 'Private Company', role: 'Engineer', status: 'saved', id: index + 1}));
+        ({company: 'Private Company', role: 'Engineer', status: 'saved', url: 'https://example.com/jobs/1', id: index + 1}));
     } else if (path === '/api/stats') { payload = {total, by_status: {applied: 0, interview: 0, offer: 0}}; }
     else throw new Error(`Unexpected request: ${path}`);
     return {ok: status < 400, status, json: async () => payload};
@@ -234,6 +234,12 @@ async function main() {
   assert.equal(node('save-button').disabled, false);
   assert.equal(node('save-button').textContent, 'Save application');
   const remove = node('applications').children[0].children.at(-1).children.at(-1);
+  assert.equal(remove.attributes['aria-label'], 'Delete application for Engineer at Private Company');
+  const roleLink = node('applications').children[0].children.at(-1).children.find(child => child.tagName === 'a');
+  assert.equal(roleLink.attributes['aria-label'], 'View Engineer at Private Company (opens in a new tab)');
+  assert.equal(roleLink.href, 'https://example.com/jobs/1');
+  assert.equal(roleLink.target, '_blank');
+  assert.equal(roleLink.rel, 'noopener noreferrer');
   confirmDelete = false;
   await remove.events.click();
   assert.equal(deleteRequests, 0);

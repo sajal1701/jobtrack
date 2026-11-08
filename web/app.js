@@ -111,10 +111,12 @@ async function load() {
     actions.append(element("span", application.follow_up_date ? `Follow up: ${application.follow_up_date}` : "No follow-up date", "subtle"));
     if (application.url) {
       const link = element("a", "View role ↗");
+      link.setAttribute("aria-label", `View ${application.role} at ${application.company} (opens in a new tab)`);
       link.href = application.url; link.target = "_blank"; link.rel = "noopener noreferrer";
       actions.append(link);
     }
     const remove = element("button", "Delete", "text-button");
+    remove.setAttribute("aria-label", `Delete application for ${application.role} at ${application.company}`);
     remove.type = "button";
     remove.addEventListener("click", async () => {
       if (remove.disabled) return;
