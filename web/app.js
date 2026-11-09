@@ -55,9 +55,16 @@ let loadVersion = 0;
 async function load() {
   const version = ++loadVersion;
   const parameters = filterParameters();
-  const [applications, stats] = await Promise.all([
-    request(`/api/applications?${parameters}`), request("/api/stats"),
-  ]);
+  byId("applications").setAttribute("aria-busy", "true");
+  let results;
+  try {
+    results = await Promise.all([
+      request(`/api/applications?${parameters}`), request("/api/stats"),
+    ]);
+  } finally {
+    if (version === loadVersion) byId("applications").setAttribute("aria-busy", "false");
+  }
+  const [applications, stats] = results;
   if (version !== loadVersion) return;
   const count = applications.length;
   const summary = count === 100
@@ -211,6 +218,7 @@ byId("toggle-password").addEventListener("click", () => {
 
 function showAccount(user) {
   clearTimeout(debounce);
+  byId("applications").setAttribute("aria-busy", "false");
   byId("application-summary").textContent = "";
   setPasswordVisibility(false);
   ++loadVersion;

@@ -31,6 +31,8 @@ async function main() {
   let deferLogout = false;
   let resolveLogout;
   let failList = false;
+  let deferList = false;
+  const pendingLists = [];
   let unreadableList = false;
   let networkFailure = false;
   let emptyList = false;
@@ -83,6 +85,7 @@ async function main() {
     } else if (mode === 'expired') { status = 401; payload = {detail: 'Please sign in.'}; }
     else if (path.startsWith('/api/applications')) {
       listRequests.push(path);
+      if (deferList) return new Promise(resolve => pendingLists.push(resolve));
       if (failList) return {ok: false, status: 500, json: async () => ({detail: 'Could not load applications.'})};
       if (unreadableList) return {ok: true, status: 200, json: async () => { throw new SyntaxError('Unexpected token <'); }};
       payload = emptyList ? [] : Array.from({length: listSize}, (_, index) =>
@@ -352,6 +355,7 @@ async function main() {
   failList = true;
   await handlers['clear-filters:click']();
   assert.equal(node('notice').textContent, 'Could not load applications.');
+  assert.equal(node('applications').attributes['aria-busy'], 'false');
   assert.equal(node('notice').className, 'notice error');
   node('search').value = 'Private & Co';
   node('stage').value = 'interview';
@@ -433,6 +437,25 @@ async function main() {
   await vm.runInContext('restoreSession()', context);
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('auth-panel').hidden, false);
+  mode = 'signed-in';
+  vm.runInContext('showAccount({username:"alice"})', context);
+  deferList = true;
+  const olderLoad = vm.runInContext('load()', context);
+  const newerLoad = vm.runInContext('load()', context);
+  assert.equal(node('applications').attributes['aria-busy'], 'true');
+  pendingLists.shift()({ok: true, status: 200, json: async () => []});
+  await olderLoad;
+  assert.equal(node('applications').attributes['aria-busy'], 'true');
+  pendingLists.shift()({ok: true, status: 200, json: async () => []});
+  await newerLoad;
+  assert.equal(node('applications').attributes['aria-busy'], 'false');
+  const loadBeforeSignOut = vm.runInContext('load()', context);
+  vm.runInContext('showAccount(null)', context);
+  assert.equal(node('applications').attributes['aria-busy'], 'false');
+  pendingLists.shift()({ok: true, status: 200, json: async () => []});
+  await loadBeforeSignOut;
+  assert.equal(node('applications').children.length, 0);
+  assert.equal(node('tracker').hidden, true);
   console.log('Frontend checks passed, including session restoration and list-load recovery.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
