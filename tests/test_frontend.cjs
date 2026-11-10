@@ -43,6 +43,7 @@ async function main() {
   let deferLogin = false;
   let resolveLogin;
   let confirmDelete = true;
+  const confirmationMessages = [];
   let deleteRequests = 0;
   let resolveDelete;
   let createRequests = 0;
@@ -99,7 +100,7 @@ async function main() {
       ...node(Symbol()), tagName, events: {},
       addEventListener(name, callback) { this.events[name] = callback; },
     })},
-    window: {confirm: () => confirmDelete},
+    window: {confirm: message => { confirmationMessages.push(message); return confirmDelete; }},
     fetch, URLSearchParams, setTimeout, clearTimeout,
     FormData: class { constructor(form) { return Object.entries(form.values || {}); } },
   });
@@ -245,6 +246,8 @@ async function main() {
   assert.equal(roleLink.rel, 'noopener noreferrer');
   confirmDelete = false;
   await remove.events.click();
+  assert.equal(confirmationMessages.at(-1),
+    'Delete the application for Engineer at Private Company? This cannot be undone.');
   assert.equal(deleteRequests, 0);
   confirmDelete = true;
   const pendingDelete = remove.events.click();

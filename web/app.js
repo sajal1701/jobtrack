@@ -127,7 +127,7 @@ async function load() {
     remove.type = "button";
     remove.addEventListener("click", async () => {
       if (remove.disabled) return;
-      if (!window.confirm(`Delete the application for ${application.company}?`)) return;
+      if (!window.confirm(`Delete the application for ${application.role} at ${application.company}? This cannot be undone.`)) return;
       remove.disabled = true;
       remove.textContent = "Deleting…";
       let deleted = false;
