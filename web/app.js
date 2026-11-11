@@ -52,6 +52,15 @@ function filterParameters() {
 }
 
 let loadVersion = 0;
+function followUpLabel(application, now = new Date()) {
+  if (!application.follow_up_date) return "No follow-up date";
+  const date = application.follow_up_date;
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const active = !["offer", "rejected"].includes(application.status);
+  const urgency = active && date <= today ? (date === today ? " — Today" : " — Overdue") : "";
+  return `Follow up: ${date}${urgency}`;
+}
+
 async function load() {
   const version = ++loadVersion;
   const parameters = filterParameters();
@@ -115,7 +124,7 @@ async function load() {
     card.append(top);
     if (application.notes) card.append(element("p", application.notes, "notes"));
     const actions = element("div", undefined, "card-actions");
-    actions.append(element("span", application.follow_up_date ? `Follow up: ${application.follow_up_date}` : "No follow-up date", "subtle"));
+    actions.append(element("span", followUpLabel(application), "subtle"));
     if (application.url) {
       const link = element("a", "View role ↗");
       link.setAttribute("aria-label", `View ${application.role} at ${application.company} (opens in a new tab)`);

@@ -7,6 +7,7 @@ you left off after closing the app.
 ## What you can do
 
 - Save a company, role, job link, notes, and an optional follow-up date.
+- Spot follow-ups due today or overdue using your local date. Applications at the offer or rejected stage keep their date without an urgency label.
 - Track each application as Saved, Applied, Interview, Offer, or Rejected.
 - Search by company or role and filter by stage.
 - See your total applications, interviews, and offers at a glance.

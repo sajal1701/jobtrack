@@ -105,6 +105,16 @@ async function main() {
     FormData: class { constructor(form) { return Object.entries(form.values || {}); } },
   });
   vm.runInContext(fs.readFileSync('web/app.js', 'utf8'), context);
+  const followUp = (date, status = 'applied') => vm.runInContext(
+    `followUpLabel(${JSON.stringify({follow_up_date: date, status})}, new Date(2026, 10, 11, 0, 5))`, context);
+  assert.equal(followUp(null), 'No follow-up date');
+  assert.equal(followUp('2026-11-10'), 'Follow up: 2026-11-10 — Overdue');
+  assert.equal(followUp('2026-11-11'), 'Follow up: 2026-11-11 — Today');
+  assert.equal(followUp('2026-11-12'), 'Follow up: 2026-11-12');
+  for (const status of ['offer', 'rejected']) {
+    assert.equal(followUp('2026-11-10', status), 'Follow up: 2026-11-10');
+    assert.equal(followUp('2026-11-11', status), 'Follow up: 2026-11-11');
+  }
   await new Promise(setImmediate);
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('auth-panel').hidden, false);
