@@ -3,3 +3,10 @@
 @media(max-width:800px){main{padding:28px 18px}.layout{grid-template-columns:1fr}.form-panel{position:static}.stats{grid-template-columns:repeat(2,1fr)}h1{font-size:39px}.panel{padding:21px}.card-top{gap:10px}}@media(max-width:440px){header{align-items:start}.badge{font-size:11px;padding:8px 10px}.filters{grid-template-columns:1fr}.card-top{flex-direction:column}.card-top select{width:100%}}
 
 #auth-panel{max-width:480px;margin:auto}#auth-form button{margin-top:12px}.account-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.section-top{display:flex;justify-content:space-between;align-items:start;gap:12px}
+
+/* Keep long application names and toolbar actions within narrow panels. */
+.layout>*,.card-top>div,.section-top>div{min-width:0}
+.card-top h3,.card-top p{overflow-wrap:anywhere}
+.card-top select{flex-shrink:0}
+.section-top{flex-wrap:wrap}
+.section-top>div:last-child{display:flex;flex-wrap:wrap;gap:8px}
