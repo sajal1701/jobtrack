@@ -58,6 +58,7 @@ the same account next time. Password reset is not available yet.
    using the dropdown on its card as you make progress.
 
 Use **Search company or role** and **All stages** to find applications.
+Search updates as you type; press **Enter** to apply it immediately.
 Click **Clear filters** to reset both filters and show all applications again.
 You can also press **Escape** while the search field is focused.
 Click **Refresh** to reload applications while keeping your current filters.

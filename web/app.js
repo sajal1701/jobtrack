@@ -201,6 +201,13 @@ async function clearFilters() {
 }
 byId("clear-filters").addEventListener("click", clearFilters);
 byId("search").addEventListener("keydown", async (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    clearTimeout(debounce);
+    try { await load(); }
+    catch (error) { notify(error.message, true); }
+    return;
+  }
   if (event.key !== "Escape") return;
   event.preventDefault();
   await clearFilters();
