@@ -201,6 +201,8 @@ async function clearFilters() {
 }
 byId("clear-filters").addEventListener("click", clearFilters);
 byId("search").addEventListener("keydown", async (event) => {
+  // Enter and Escape belong to the input method while text is being composed.
+  if (event.isComposing || event.keyCode === 229) return;
   if (event.key === "Enter") {
     event.preventDefault();
     clearTimeout(debounce);

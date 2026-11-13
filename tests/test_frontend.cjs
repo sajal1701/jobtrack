@@ -343,6 +343,15 @@ async function main() {
   node('search').value = 'Keyboard search';
   node('stage').value = 'offer';
   const requestsBeforeEnter = listRequests.length;
+  for (const key of ['Enter', 'Escape']) {
+    for (const composition of [{isComposing: true}, {keyCode: 229}]) {
+      await handlers['search:keydown']({key, ...composition,
+        preventDefault() { throw new Error('Composition keys must keep their default behavior'); }});
+      assert.equal(node('search').value, 'Keyboard search');
+      assert.equal(node('stage').value, 'offer');
+      assert.equal(listRequests.length, requestsBeforeEnter);
+    }
+  }
   handlers['search:input']();
   let enterPrevented = false;
   await handlers['search:keydown']({key: 'Enter', preventDefault() { enterPrevented = true; }});
