@@ -325,6 +325,16 @@ async function main() {
   emptyList = false;
   await handlers['clear-filters:click']();
   assert.equal(node('applications').children[0].tagName, 'article');
+  node('search').value = 'Combined search';
+  handlers['search:input']();
+  node('stage').value = 'applied';
+  const requestsBeforeStage = listRequests.length;
+  await handlers['stage:change']();
+  const stageUrl = new URL(listRequests.at(-1), 'http://localhost');
+  assert.equal(stageUrl.searchParams.get('search'), 'Combined search');
+  assert.equal(stageUrl.searchParams.get('status'), 'applied');
+  await new Promise(resolve => setTimeout(resolve, 250));
+  assert.equal(listRequests.length, requestsBeforeStage + 1);
   node('search').value = 'Private & Co';
   node('stage').value = 'interview';
   handlers['search:input']();

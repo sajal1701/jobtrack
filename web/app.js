@@ -223,7 +223,10 @@ byId("export-csv").addEventListener("click", () => {
   link.remove();
 });
 byId("search").addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(() => load().catch((error) => notify(error.message, true)), 200); });
-byId("stage").addEventListener("change", () => load().catch((error) => notify(error.message, true)));
+byId("stage").addEventListener("change", () => {
+  clearTimeout(debounce);
+  return load().catch((error) => notify(error.message, true));
+});
 function setPasswordVisibility(visible) {
   byId("auth-password").type = visible ? "text" : "password";
   byId("toggle-password").textContent = visible ? "Hide password" : "Show password";
