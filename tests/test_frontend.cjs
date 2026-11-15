@@ -339,7 +339,9 @@ async function main() {
   node('stage').value = 'interview';
   handlers['search:input']();
   const requestsBeforeClear = listRequests.length;
+  focusedId = 'clear-filters';
   await handlers['clear-filters:click']();
+  assert.equal(focusedId, 'search');
   assert.equal(node('search').value, '');
   assert.equal(node('stage').value, '');
   const clearedUrl = new URL(listRequests.at(-1), 'http://localhost');

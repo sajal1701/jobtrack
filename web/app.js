@@ -194,6 +194,7 @@ async function clearFilters() {
   clearTimeout(debounce);
   byId("search").value = "";
   byId("stage").value = "";
+  byId("search").focus();
   try {
     await load();
     notify("");
