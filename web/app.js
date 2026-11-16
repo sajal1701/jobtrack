@@ -70,6 +70,9 @@ async function load() {
     results = await Promise.all([
       request(`/api/applications?${parameters}`), request("/api/stats"),
     ]);
+  } catch (error) {
+    if (version !== loadVersion) return;
+    throw error;
   } finally {
     if (version === loadVersion) byId("applications").setAttribute("aria-busy", "false");
   }

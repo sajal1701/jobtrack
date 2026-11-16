@@ -497,6 +497,18 @@ async function main() {
   pendingLists.shift()({ok: true, status: 200, json: async () => []});
   await newerLoad;
   assert.equal(node('applications').attributes['aria-busy'], 'false');
+  const staleSearch = handlers['stage:change']();
+  const currentSearch = handlers['stage:change']();
+  const resolveStaleSearch = pendingLists.shift();
+  pendingLists.shift()({ok: true, status: 200, json: async () => []});
+  await currentSearch;
+  vm.runInContext('notify("Current results loaded.")', context);
+  const currentSummary = node('application-summary').textContent;
+  resolveStaleSearch({ok: false, status: 500, json: async () => ({detail: 'Outdated search failed.'})});
+  await staleSearch;
+  assert.equal(node('notice').textContent, 'Current results loaded.');
+  assert.equal(node('application-summary').textContent, currentSummary);
+  assert.equal(node('applications').attributes['aria-busy'], 'false');
   const loadBeforeSignOut = vm.runInContext('load()', context);
   vm.runInContext('showAccount(null)', context);
   assert.equal(node('applications').attributes['aria-busy'], 'false');
