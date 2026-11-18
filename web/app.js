@@ -226,7 +226,14 @@ byId("export-csv").addEventListener("click", () => {
   link.click();
   link.remove();
 });
-byId("search").addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(() => load().catch((error) => notify(error.message, true)), 200); });
+function scheduleSearch(event = {}) {
+  clearTimeout(debounce);
+  if (event.isComposing) return;
+  debounce = setTimeout(() => load().catch((error) => notify(error.message, true)), 200);
+}
+byId("search").addEventListener("compositionstart", () => clearTimeout(debounce));
+byId("search").addEventListener("compositionend", () => scheduleSearch());
+byId("search").addEventListener("input", scheduleSearch);
 byId("stage").addEventListener("change", () => {
   clearTimeout(debounce);
   return load().catch((error) => notify(error.message, true));
