@@ -244,11 +244,19 @@ function setPasswordVisibility(visible) {
   byId("toggle-password").setAttribute("aria-pressed", String(visible));
 }
 
+function updateCapsLockHint(event) {
+  byId("caps-lock-hint").hidden = !event.getModifierState?.("CapsLock");
+}
+byId("auth-password").addEventListener("keydown", updateCapsLockHint);
+byId("auth-password").addEventListener("keyup", updateCapsLockHint);
+byId("auth-password").addEventListener("blur", () => { byId("caps-lock-hint").hidden = true; });
+
 byId("toggle-password").addEventListener("click", () => {
   setPasswordVisibility(byId("auth-password").type === "password");
 });
 
 function showAccount(user) {
+  byId("caps-lock-hint").hidden = true;
   clearTimeout(debounce);
   byId("applications").setAttribute("aria-busy", "false");
   byId("application-summary").textContent = "";

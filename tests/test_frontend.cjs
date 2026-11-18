@@ -119,6 +119,15 @@ async function main() {
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('auth-panel').hidden, false);
   const password = node('auth-password');
+  handlers['auth-password:keydown']({getModifierState: key => key === 'CapsLock'});
+  assert.equal(node('caps-lock-hint').hidden, false);
+  handlers['auth-password:keyup']({getModifierState: () => false});
+  assert.equal(node('caps-lock-hint').hidden, true);
+  handlers['auth-password:keydown']({getModifierState: () => true});
+  handlers['auth-password:blur']();
+  assert.equal(node('caps-lock-hint').hidden, true);
+  handlers['auth-password:keydown']({});
+  assert.equal(node('caps-lock-hint').hidden, true);
   password.value = 'a-long-test-password';
   assert.equal(password.type, 'password');
   handlers['toggle-password:click']();
