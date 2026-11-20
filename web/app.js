@@ -80,7 +80,7 @@ async function load() {
   if (version !== loadVersion) return;
   const count = applications.length;
   const summary = count === 100
-    ? "Showing the first 100 matching applications."
+    ? "Showing the first 100 matching applications. Narrow your filters or use Download CSV for all matches."
     : `Showing ${count} matching application${count === 1 ? "" : "s"}.`;
   byId("application-summary").textContent = `${summary} Statistics cover your whole tracker.`;
   byId("total").textContent = stats.total;

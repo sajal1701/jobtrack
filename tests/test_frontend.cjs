@@ -312,7 +312,7 @@ async function main() {
   total = 125;
   await vm.runInContext('load()', context);
   assert.equal(node('application-summary').textContent,
-    'Showing the first 100 matching applications. Statistics cover your whole tracker.');
+    'Showing the first 100 matching applications. Narrow your filters or use Download CSV for all matches. Statistics cover your whole tracker.');
   listSize = 2;
   await vm.runInContext('load()', context);
   assert.equal(node('application-summary').textContent,

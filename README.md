@@ -59,7 +59,8 @@ the same account next time. Password reset is not available yet.
 
 Use **Search company or role** and **All stages** to find applications.
 Search updates as you type; press **Enter** to apply it immediately.
-Click **Clear filters** to reset both filters and show all applications again.
+Click **Clear filters** to reset both filters. The browser shows up to 100
+applications; narrow your filters or download CSV to access all matches.
 You can also press **Escape** while the search field is focused.
 Click **Refresh** to reload applications while keeping your current filters.
 The summary counts cover your whole tracker, even when filters are active.
