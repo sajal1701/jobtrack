@@ -12,7 +12,7 @@
     <p id="notice" role="status" aria-live="polite" hidden></p>
     <section id="auth-panel" class="panel">
       <h2>Sign in or create an account</h2>
-      <form id="auth-form">
+      <form id="auth-form" method="post" action="/api/auth/login">
         <label>Username<input name="username" required minlength="3" maxlength="50" pattern="[a-zA-Z0-9_-]+" autocomplete="username" autocapitalize="none" spellcheck="false" aria-describedby="auth-requirements"></label>
         <label>Password<input id="auth-password" name="password" type="password" required minlength="12" maxlength="128" autocomplete="current-password" aria-describedby="auth-requirements caps-lock-hint"></label>
         <p id="caps-lock-hint" class="subtle" role="status" hidden>Caps Lock is on.</p>
