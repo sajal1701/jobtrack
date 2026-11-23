@@ -36,7 +36,8 @@
           <label>Company<input id="company" name="company" required maxlength="150" placeholder="Company name"></label>
           <label>Role<input name="role" required maxlength="200" placeholder="Graduate software engineer"></label>
           <label>Stage<select name="status"><option value="saved">Saved</option><option value="applied">Applied</option><option value="interview">Interview</option><option value="offer">Offer</option><option value="rejected">Rejected</option></select></label>
-          <label>Job link<input name="url" type="url" maxlength="2000" placeholder="https://..."></label>
+          <label>Job link<input name="url" type="url" maxlength="2000" pattern="[hH][tT][tT][pP][sS]?://.+" title="Use a complete http:// or https:// job link." aria-describedby="job-link-hint" placeholder="https://..."></label>
+          <p id="job-link-hint" class="subtle">Optional. Use a complete http:// or https:// job link.</p>
           <label>Follow-up date<input name="follow_up_date" type="date"></label>
           <label>Notes<textarea name="notes" rows="3" maxlength="5000" placeholder="Requirements, contacts, or next steps"></textarea></label>
           <button type="submit">Save application</button>
