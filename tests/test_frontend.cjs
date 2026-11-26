@@ -35,6 +35,7 @@ async function main() {
   const pendingLists = [];
   let unreadableList = false;
   let networkFailure = false;
+  let unexpectedError;
   let emptyList = false;
   let listSize = 1;
   let total = 1;
@@ -52,6 +53,7 @@ async function main() {
   let patchRequests = 0;
   let resolvePatch;
   const fetch = async (path, options = {}) => {
+    if (unexpectedError !== undefined) return {ok: false, status: 500, json: async () => unexpectedError};
     if (networkFailure) throw new TypeError('Failed to fetch');
     if (options.method === 'PATCH') {
       patchRequests++;
@@ -119,6 +121,14 @@ async function main() {
   assert.equal(node('tracker').hidden, true);
   assert.equal(node('auth-panel').hidden, false);
   const password = node('auth-password');
+  for (const payload of [null, {detail: {}}, {detail: [null, {msg: 'Missing location'}]}, {detail: []}]) {
+    unexpectedError = payload;
+    await assert.rejects(vm.runInContext('request("/api/stats")', context),
+      {message: 'The request failed. Please try again.'});
+  }
+  unexpectedError = {detail: [{loc: ['body', 'company'], msg: 'Required'}]};
+  await assert.rejects(vm.runInContext('request("/api/stats")', context), {message: 'company: Required'});
+  unexpectedError = undefined;
   handlers['auth-password:keydown']({getModifierState: key => key === 'CapsLock'});
   assert.equal(node('caps-lock-hint').hidden, false);
   handlers['auth-password:keyup']({getModifierState: () => false});

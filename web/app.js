@@ -24,11 +24,12 @@ async function request(path, options = {}) {
   if (!response.ok) {
     if (response.status === 401) showAccount(null);
     const payload = await response.json().catch(() => ({}));
-    const detail = payload.detail;
+    const detail = payload?.detail;
     const message = Array.isArray(detail)
-      ? detail.map((item) => `${item.loc.slice(1).join(".")}: ${item.msg}`).join("; ")
-      : detail || "The request failed. Please try again.";
-    throw new Error(message);
+      ? detail.filter((item) => Array.isArray(item?.loc) && typeof item.msg === "string")
+        .map((item) => `${item.loc.slice(1).join(".")}: ${item.msg}`).join("; ")
+      : typeof detail === "string" ? detail : "";
+    throw new Error(message || "The request failed. Please try again.");
   }
   if (response.status === 204) return null;
   try {
